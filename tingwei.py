@@ -2,6 +2,9 @@
 # to scan the txt file and calculate the frequency
 # of SNPs in large human samples
 # version 1.005
+
+# git version
+# 1
 import re
 import os
 import sys
