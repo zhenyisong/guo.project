@@ -17,6 +17,10 @@ import sys
 # another one to escape it. For example, the two following 
 # lines of code are functionally identical:
 
+
+# GIT version
+# 2
+
 def readGenomeData(file_name):
     file_handle      = open(file_name, 'rU')
     result           = []
