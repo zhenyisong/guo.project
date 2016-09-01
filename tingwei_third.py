@@ -1,10 +1,7 @@
 # this program is designed for Guo Tingwei Project
 # to scan the txt file and calculate the frequency
 # of SNPs in large human samples
-# version 1.006
-
-# git version
-# 1
+# version 1.005
 import re
 import os
 import sys
@@ -16,30 +13,12 @@ import sys
 # another one to escape it. For example, the two following 
 # lines of code are functionally identical:
 
-#-------------------------------------------------------------
-# @parameters
-#    file name which will be opened by this program
-#    this file name is a string and in the same dir
-#    of the python program.
-# @return
-#    the result will be a list in order, the element
-#    of this result is a list. This list contain a number
-#    of list as its element.
-#    The list of the element is the patient id, the 
-#    second element in the list is the col_id
-#    The style is like this :  [patient_id, SNP_code_pair]
-# @function
-#   this function is to read the specified formatted data
-#   in its txt style, for example, tingwei.csv
-#-------------------------------------------------------------
-
 def readGenomeData(file_name):
     file_handle      = open(file_name, 'rU')
     result           = []
     for line in file_handle:
         matched_line = re.match(r"\d+",line)
         if matched_line:
-            line = line.rstrip('\n')
             genome_line = re.split(r",",line)
             #print(genome_line[0])
             if genome_line:
@@ -131,7 +110,7 @@ if ref_tags == -1:
     print("this column has no max ref_locus")
     sys.exit(1)
 for i in ref_tags:
-    left_all_tags        = set(all_tags) - set([i])
+    left_all_tags        = set(all_tags) - set(i)
     tagged_file_name     = i + '_' + str(column_index) + '.tag.guotingwei.txt';
     numbered_file_name   = i + '_' + str(column_index) + '.nub.guotingwei.txt';
     tagged_file_handle   = open(tagged_file_name,'w')
