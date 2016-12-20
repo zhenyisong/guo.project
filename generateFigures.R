@@ -132,9 +132,10 @@ upper_tri
 
 melted_cormat <- melt(upper_tri, na.rm = TRUE)
 
-setwd('C:\\Users\\Yisong\\Desktop')
-pdf("figure3B.pdf")
-figure.3A <- ggplot(data = melted_cormat, aes(Var2, Var1, fill = value)) +
+#setwd('C:\\Users\\Yisong\\Desktop')
+#pdf("figure3B.pdf")
+dev.off()
+figure.3A <- ggplot(data = melted_cormat, aes(X2,X1, fill = value)) +
              geom_tile(color = "white") +
              scale_fill_gradient2(low = "blue", high = "brown", mid = "white", 
                                   midpoint = 0, limit = c(-1,1), space = "Lab", 
@@ -166,7 +167,7 @@ figure.3A +
   guides(fill = guide_colorbar(barwidth = 7, barheight = 1,
                                title.position = "top", title.hjust = 0.5))
 
-dev.off()
+#dev.off()
 
 #----------------------------------------------------------------------
 # Figure 4
@@ -253,28 +254,28 @@ par(mfrow = c(1,6), mar = c(6,0,3,0), pin = c(5,5),cex = 0.78)
 #        psize = 3)
 #
 forest(res_B0702 , annotate = FALSE, refline = 0, xlab = "Beta (95%CI)", 
-        slab = labs, mlab = "Meta p-value=2.49E-08", order = c(7:1),
-        psize = 2)
+        slab = labs, mlab = expression(italic(P[meta])==~2.49E-08), order = c(7:1),
+        psize = 3.5)
 # set the p value from meta analysis
 # mtext(paste("Association p-value=",summary(res_B0702)$pval),side=3, line=-1)
 # mtext(paste("Heterogeneity p-value=",summary(res_B0702)$QEp),side=3, line=-2.25)
 # set the p value by youreslf;
 mtext("HLA-B*07:02",side = 3,line = -3, adj = 0, cex = 0.9)
-mtext("Heterogeneity p=0.7321",side = 1, line = 4, cex = 0.8)
+mtext(expression(italic(P[heterous])==~0.7321),side = 1, line = 4, cex = 0.8)
 
 
 # Plot combined data
 # forest(res_B07, annotate=FALSE,refline=0, xlab="Beta (95%CI)", slab=rep("",length(res_B07$yi)), mlab=NA)
 forest( res_B07, annotate = FALSE,refline = 0, xlab = "Beta (95%CI)", 
-        slab = labs, mlab = "Meta p-value=8.24E-11", psize = 3, order = c(7:1), width = c(0))
+        slab = labs, mlab = expression(italic(P[meta])==~8.24E-11), psize = 3, order = c(7:1))
 mtext("HLA-B*07",side = 3, line = -3, adj = 0, cex = 0.9)
-mtext("                   p=0.5941",side = 1, line = 4, cex = 0.8)
+mtext(expression(italic(P[heterous])==~0.5941),side = 1, line = 4, cex = 0.8)
 
 # Plot combined data
 forest( res_C0302, annotate = FALSE,refline = 0, xlab = "Beta (95%CI)", 
-        slab = labs, mlab = "Meta p-value=2.10E-8",psize = 3, order = c(7:1))
+        slab = labs, mlab = expression(italic(P[meta])==~2.10E-8),psize = 3, order = c(7:1))
 mtext("HLA-C*03:02",side = 3, line = -3, adj = 0, cex = 0.9)
-mtext("                   p=0.2074",side = 1, line = 4, cex = 0.8)
+mtext(expression(italic(P[heterous])==~0.2074),side = 1, line = 4, cex = 0.8)
 
 #dev.off()
 
@@ -282,22 +283,22 @@ mtext("                   p=0.2074",side = 1, line = 4, cex = 0.8)
 
 # Plot combined data
 forest( res_DRB03, annotate = FALSE,refline = 0, xlab = "Beta (95%CI)", 
-        slab = labs, mlab = "Meta p-value=4.26E-8",psize = 3, order = c(7:1))
+        slab = labs, mlab = expression(italic(P[meta])==~4.26E-8),psize = 3, order = c(7:1))
 mtext("HLA-DRB1*03",side = 3, line = -3, adj = 0, cex = 0.9)
-mtext("                   p=0.4155",side = 1,line = 4, cex = 0.8)
+mtext(expression(italic(P[heterous])==~0.4155),side = 1,line = 4, cex = 0.8)
 
 # Plot combined data
 forest( res_DRB07, annotate = FALSE,refline = 0, xlab = "Beta (95%CI)", 
-        slab = labs, mlab = "Meta p-value=6.67E-11",psize = 3, order = c(7:1))
+        slab = labs, mlab = expression(italic(P[meta])==~6.67E-11),psize = 3, order = c(7:1))
 mtext("HLA-DRB1*07",side = 3, line = -3, adj = 0, cex = 0.9)
-mtext("                   p=0.1712",side = 1,line = 4, cex = 0.8)
+mtext(expression(italic(P[heterous])==~0.1712),side = 1,line = 4, cex = 0.8)
 
 
 # Plot combined data
 forest( res_DRB12, annotate = FALSE,refline = 0, xlab = "Beta (95%CI)", 
-        slab = labs, mlab = "Meta p-value=6.64E-9",psize = 3 ,order = c(7:1))
+        slab = labs, mlab = expression(italic(P[meta])==~6.64E-9),psize = 3 ,order = c(7:1))
 mtext("HLA-DRB1*12",side = 3, line = -3,adj = 0, cex = 0.9)
-mtext("                   p=0.9670",side = 1,line = 4, cex = 0.8)
+mtext(expression(italic(P[heterous])==~0.9670),side = 1,line = 4, cex = 0.8)
 
 # figure 1
 #--end 
@@ -309,6 +310,7 @@ setwd("C:\\Users\\Yisong\\Desktop\\nejm_data")
 figure3b.filename <- 'Figure3B_OriginalData.xlsx'
 figure3b.data.df  <- read.xlsx( figure3b.filename, sheetIndex = 1, header = TRUE)
 colnames(figure3b.data.df)[dim(figure3b.data.df)[2]] <- 'Feq.(%)'
+figure3b.data.df$'Feq.(%)' <- round(as.numeric(figure3b.data.df$F),2)
 
 g <- tableGrob(figure3b.data.df, rows = NULL)
 
@@ -332,10 +334,10 @@ for (i in c(1:60) ){
     ind <- find.cell(g, cell.x, cell.y, "core-bg")
     if (cell.x > 14) {
         
-        g$grobs[ind][[1]][["gp"]] <- gpar(fill = 'darkturquoise', col = NA)
+        g$grobs[ind][[1]][["gp"]] <- gpar(fill = 'lightcoral', col = NA)
     }
     else {
-        g$grobs[ind][[1]][["gp"]] <- gpar(fill = 'lightpink', col = NA)
+        g$grobs[ind][[1]][["gp"]] <- gpar(fill = 'lightblue3', col = NA)
     }
     
 }
@@ -369,13 +371,14 @@ grid.draw(g)
 #---
 final.figure.df <- data.frame( x.cord   = c(0.2, 0.4, 1.4, 1.6),
                                sex      = factor(c(1, 2, 3, 4)),
-                               resp    = c(0.108, 0.035, 0.079, 0.021),
+                               resp     = c(0.108, 0.035, 0.079, 0.021),
                                group = factor(c(1, 1, 2, 2)),
                                se    = c(0.017,0.016,0.011,0.01) )
 # plot.margin	
 # margin around entire plot 
 # (unit with the sizes of the top, right, bottom, and left margins)
 dev.off()
+pdf('FgiureX1.pdf',
 limits <- aes(ymax = resp + se, ymin = resp - se)
 p <- ggplot(final.figure.df, aes(y = resp, x = x.cord, group = group, xmax = 2.4, ymin = -0.15, ymax = 0.15))
 p + geom_point(shape = 15, cex = 3, color = 'black') + 
@@ -390,17 +393,17 @@ p + geom_point(shape = 15, cex = 3, color = 'black') +
     coord_flip() +
     geom_segment(aes(x = 0.0, y = 0.0, xend = 2.2, yend = 0.0), linetype='dashed', size = 0.5) +
     geom_text( aes(2, -0.12, label = "HLA-B*07") ) + 
-    geom_text( aes(1.6, -0.10, label = "Male") ) +
-    geom_text( aes(1.4, -0.10, label = "Female") ) +
+    geom_text( aes(1.6, -0.10, label = "Female") ) +
+    geom_text( aes(1.4, -0.10, label = "Male") ) +
     geom_text( aes(0.6, -0.12, label = "HLA-DRB1*07") ) +
-    geom_text( aes(0.4, -0.10, label = "Male") ) +
-    geom_text( aes(0.2, -0.10, label = "Female") ) +
-    geom_segment(aes(x = 1.6, y = 0.12,xend = 1.6, yend = 0.14)) +
-    geom_segment(aes(x = 1.4, y = 0.14,xend = 1.6, yend = 0.14)) +
-    geom_segment(aes(x = 1.4, y = 0.12,xend = 1.4, yend = 0.14)) +
-    geom_segment(aes(x = 0.4, y = 0.14,xend = 0.4, yend = 0.16)) +
-    geom_segment(aes(x = 0.2, y = 0.16,xend = 0.4, yend = 0.16)) +
-    geom_segment(aes(x = 0.2, y = 0.14,xend = 0.2, yend = 0.16)) 
+    geom_text( aes(0.4, -0.10, label = "Female") ) +
+    geom_text( aes(0.2, -0.10, label = "Male") ) +
+    geom_segment(aes(x = 1.6, y = 0.14,xend = 1.6, yend = 0.145)) +
+    geom_segment(aes(x = 1.4, y = 0.145,xend = 1.6, yend = 0.145)) +
+    geom_segment(aes(x = 1.4, y = 0.14,xend = 1.4, yend = 0.145)) +
+    geom_segment(aes(x = 0.4, y = 0.14,xend = 0.4, yend = 0.145)) +
+    geom_segment(aes(x = 0.2, y = 0.145,xend = 0.4, yend = 0.145)) +
+    geom_segment(aes(x = 0.2, y = 0.14,xend = 0.2, yend = 0.145)) 
 
 #annotation_custom(grob = linesGrob(), xmin = 1, xmax = 1.1, ymin = 100, ymax = 100)
 
@@ -413,10 +416,10 @@ grid.id <- substring(grid.layout,x.start,x.stop)
 
 downViewport(grid.id)
 pushViewport(dataViewport( yscale=c(0,100), clip='off',xscale=c(0,1)))
-grid.lines(x=c(-0.15, 1), y = c(56, 56), default.units='native' )
-grid.lines(x=c(-0.15, 1), y = c(35, 35), default.units='native' )
-grid.text(x = 0.8, y = 43, default.units='native' ,label= expression(italic(P[heterous])==~0.0015))
-grid.text(x = 0.87, y = 24, default.units='native' ,label = expression(italic(P[heterous])==~6.38%*%10^{-5}))
+grid.lines(x=c(0.06, 0.79), y = c(56, 56), default.units='native' )
+grid.lines(x=c(0.06, 0.79), y = c(35, 35), default.units='native' )
+grid.text(x = 0.87, y = 43, default.units='native' ,label= expression(bolditalic(P[heterous]==~0.0015)))
+grid.text(x = 0.87, y = 24, default.units='native' ,label = expression(bolditalic(P[heterous]==~6.38%*%10^{-5})))
 #----------------------------------------------------------------------
 # test code, alternative choice
 # I am not sure if tingwei used this code to graph the data
