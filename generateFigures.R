@@ -235,7 +235,7 @@ summary(res_DRB12)
 # mfrow meaning number of row, 2 is how many panel will be side by side;
 # mar meaning margin
 # mar (bottom, left, top, right)
-par(mfrow = c(1,6), mar = c(6,0,3,0), pin = c(5,5),cex = 0.78)
+par(mfrow = c(2,3), mar = c(5,0,3,0), pin = c(5,5),cex = 0.78)
 # Plot combined data
 # transf=exp meaning beta will transformed to OR;
 #  refline=1 meaning refrence line (0 for beta and 1 for OR);
@@ -253,6 +253,8 @@ par(mfrow = c(1,6), mar = c(6,0,3,0), pin = c(5,5),cex = 0.78)
 #        slab = labs,  cex=.75, mlab = "Meta p-value=2.49E-08", order = c(7:1),
 #        psize = 3)
 #
+
+label.h <- -1
 forest(res_B0702 , annotate = FALSE, refline = 0, xlab = "Beta (95%CI)", 
         slab = labs, mlab = expression(italic(P[meta])==~2.49E-08), order = c(7:1),
         psize = 3.5)
@@ -260,7 +262,7 @@ forest(res_B0702 , annotate = FALSE, refline = 0, xlab = "Beta (95%CI)",
 # mtext(paste("Association p-value=",summary(res_B0702)$pval),side=3, line=-1)
 # mtext(paste("Heterogeneity p-value=",summary(res_B0702)$QEp),side=3, line=-2.25)
 # set the p value by youreslf;
-mtext("HLA-B*07:02",side = 3,line = -3, adj = 0, cex = 0.9)
+mtext("HLA-B*07:02",side = 3,line = label.h, adj = 0, cex = 0.9)
 mtext(expression(italic(P[heterous])==~0.7321),side = 1, line = 4, cex = 0.8)
 
 
@@ -268,13 +270,13 @@ mtext(expression(italic(P[heterous])==~0.7321),side = 1, line = 4, cex = 0.8)
 # forest(res_B07, annotate=FALSE,refline=0, xlab="Beta (95%CI)", slab=rep("",length(res_B07$yi)), mlab=NA)
 forest( res_B07, annotate = FALSE,refline = 0, xlab = "Beta (95%CI)", 
         slab = labs, mlab = expression(italic(P[meta])==~8.24E-11), psize = 3, order = c(7:1))
-mtext("HLA-B*07",side = 3, line = -3, adj = 0, cex = 0.9)
+mtext("HLA-B*07",side = 3, line = label.h, adj = 0, cex = 0.9)
 mtext(expression(italic(P[heterous])==~0.5941),side = 1, line = 4, cex = 0.8)
 
 # Plot combined data
 forest( res_C0302, annotate = FALSE,refline = 0, xlab = "Beta (95%CI)", 
         slab = labs, mlab = expression(italic(P[meta])==~2.10E-8),psize = 3, order = c(7:1))
-mtext("HLA-C*03:02",side = 3, line = -3, adj = 0, cex = 0.9)
+mtext("HLA-C*03:02",side = 3, line = label.h, adj = 0, cex = 0.9)
 mtext(expression(italic(P[heterous])==~0.2074),side = 1, line = 4, cex = 0.8)
 
 #dev.off()
@@ -284,20 +286,20 @@ mtext(expression(italic(P[heterous])==~0.2074),side = 1, line = 4, cex = 0.8)
 # Plot combined data
 forest( res_DRB03, annotate = FALSE,refline = 0, xlab = "Beta (95%CI)", 
         slab = labs, mlab = expression(italic(P[meta])==~4.26E-8),psize = 3, order = c(7:1))
-mtext("HLA-DRB1*03",side = 3, line = -3, adj = 0, cex = 0.9)
+mtext("HLA-DRB1*03",side = 3, line = label.h, adj = 0, cex = 0.9)
 mtext(expression(italic(P[heterous])==~0.4155),side = 1,line = 4, cex = 0.8)
 
 # Plot combined data
 forest( res_DRB07, annotate = FALSE,refline = 0, xlab = "Beta (95%CI)", 
         slab = labs, mlab = expression(italic(P[meta])==~6.67E-11),psize = 3, order = c(7:1))
-mtext("HLA-DRB1*07",side = 3, line = -3, adj = 0, cex = 0.9)
+mtext("HLA-DRB1*07",side = 3, line = label.h, adj = 0, cex = 0.9)
 mtext(expression(italic(P[heterous])==~0.1712),side = 1,line = 4, cex = 0.8)
 
 
 # Plot combined data
 forest( res_DRB12, annotate = FALSE,refline = 0, xlab = "Beta (95%CI)", 
         slab = labs, mlab = expression(italic(P[meta])==~6.64E-9),psize = 3 ,order = c(7:1))
-mtext("HLA-DRB1*12",side = 3, line = -3,adj = 0, cex = 0.9)
+mtext("HLA-DRB1*12",side = 3, line = label.h,adj = 0, cex = 0.9)
 mtext(expression(italic(P[heterous])==~0.9670),side = 1,line = 4, cex = 0.8)
 
 # figure 1
@@ -305,7 +307,8 @@ mtext(expression(italic(P[heterous])==~0.9670),side = 1,line = 4, cex = 0.8)
 
 #---
 # Figure.3B
-#---
+#---pdf('Figure2X.pdf')
+dev.off()
 setwd("C:\\Users\\Yisong\\Desktop\\nejm_data")
 figure3b.filename <- 'Figure3B_OriginalData.xlsx'
 figure3b.data.df  <- read.xlsx( figure3b.filename, sheetIndex = 1, header = TRUE)
@@ -344,13 +347,14 @@ for (i in c(1:60) ){
 
 grid.newpage()
 grid.draw(g)
+#ggsave('Figure2X.png', g)
 
 
 
 #apply(figure3b.data.df[,c(1:4)], 2, function(x) {substring(x,12,16)})
 
 #---
-# Figure 1.?
+# Figure3X
 #---
 
 #---
@@ -378,7 +382,6 @@ final.figure.df <- data.frame( x.cord   = c(0.2, 0.4, 1.4, 1.6),
 # margin around entire plot 
 # (unit with the sizes of the top, right, bottom, and left margins)
 dev.off()
-pdf('FgiureX1.pdf',
 limits <- aes(ymax = resp + se, ymin = resp - se)
 p <- ggplot(final.figure.df, aes(y = resp, x = x.cord, group = group, xmax = 2.4, ymin = -0.15, ymax = 0.15))
 p + geom_point(shape = 15, cex = 3, color = 'black') + 
