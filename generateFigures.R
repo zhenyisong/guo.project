@@ -14,18 +14,16 @@
 # @raw data is from Guo's project and his txt processed data
 # @data analysis
 # @result presentation
+# @update 2071-07-08
+#---
 
+library(tidyverse)
 library(reshape2)
-library(ggplot2)
 library(metafor)
 library(maptools)
-library(ggplot2)
-library(dplyr)
 library(plyr)
 library(grid)
 library(gridBase)
-library(xlsx)
-library(readxl)
 library(gridExtra)
 
 
@@ -171,58 +169,41 @@ figure.3A +
 
 #----------------------------------------------------------------------
 # Figure 4
+# @updated 2017-07-08 
 #----------------------------------------------------------------------
 
-setwd("C:\\Users\\Yisong\\Desktop\\nejm_data")
+setwd("C:\\Users\\Yisong\\Desktop\\RE3a_Figures")
 # Load input data for all the alleles;
-data <- read.csv("B0702.csv")
+B0702.df <- read.csv("B0702.csv", stringsAsFactors = FALSE)
 # # If OR's and 95% CI's, run these commented out lines
 # data$beta <- log(data$OR)
 # data$se   <- (log(data$UCL)-log(data$LCL))/(2*1.96)
-# Assign values for plotting
-labs <- data$Region
-yi   <- data$beta
-sei  <- data$se
+# Assign values for plottin
 # Combine data into summary estimate
-res_B0702  <- rma(yi = yi, sei = sei, method = "FE")
+res_B0702  <- rma(yi = B0702.df$beta, sei = B0702.df$se, method = "FE")
 summary(res_B0702)
 
-data <- read.csv("B07.csv")
-labs <- data$Region
-yi   <- data$beta
-sei  <- data$se
-res_B07  <- rma(yi = yi, sei = sei, method = "FE")
+B07.df <- read.csv("B07.csv", stringsAsFactors = FALSE)
+res_B07  <- rma(yi = B07.df$beta, sei = B07.df$se, method = "FE")
 summary(res_B07)
 
-data <- read.csv("C0302.csv")
-labs <- data$Region
-yi   <- data$beta
-sei  <- data$se
-res_C0302  <- rma(yi = yi, sei = sei, method = "FE")
+C0302.df <- read.csv("C0302.csv", stringsAsFactors = FALSE)
+res_C0302  <- rma(yi = C0302.df$beta, sei = C0302.df$se, method = "FE")
 summary(res_C0302)
 
 
-data <- read.csv("DRB03.csv")
-labs <- data$Region
-yi   <- data$beta
-sei  <- data$se
-res_DRB03  <- rma(yi = yi, sei = sei, method = "FE")
+DRB03.df   <- read.csv("DRB03.csv", stringsAsFactors = FALSE)
+res_DRB03  <- rma(yi = DRB03.df$beta, sei = DRB03.df$se, method = "FE")
 summary(res_DRB03)
 
 
-data <- read.csv("DRB07.csv")
-labs <- data$Region
-yi   <- data$beta
-sei  <- data$se
-res_DRB07  <- rma(yi = yi, sei = sei, method = "FE")
+DRB07.df   <- read.csv("DRB07.csv", stringsAsFactors = FALSE)
+res_DRB07  <- rma(yi = DRB07.df$beta, sei = DRB07.df$se, method = "FE")
 summary(res_DRB07)
 
 
-data <- read.csv("DRB12.csv")
-labs <- data$Region
-yi   <- data$beta
-sei  <- data$se
-res_DRB12  <- rma(yi = yi, sei = sei, method = "FE")
+DRB12.df   <- read.csv("DRB12.csv", stringsAsFactors = FALSE)
+res_DRB12  <- rma(yi = DRB12.df$beta, sei = DRB12.df$se, method = "FE")
 summary(res_DRB12)
 
 
@@ -255,8 +236,8 @@ par(mfrow = c(2,3), mar = c(5,0,3,0), pin = c(5,5),cex = 0.78)
 #
 
 label.h <- -1
-forest(res_B0702 , annotate = FALSE, refline = 0, xlab = "Beta (95%CI)", 
-        slab = labs, mlab = expression(italic(P[meta])==~2.49E-08), order = c(7:1),
+forest( res_B0702 , annotate = FALSE, refline = 0, xlab = "Beta (95%CI)", 
+        slab = B0702.df$Region, mlab = expression(italic(P[meta])==~2.49E-08), order = c(7:1),
         psize = 3.5)
 # set the p value from meta analysis
 # mtext(paste("Association p-value=",summary(res_B0702)$pval),side=3, line=-1)
@@ -269,13 +250,13 @@ mtext(expression(italic(P[heterous])==~0.7321),side = 1, line = 4, cex = 0.8)
 # Plot combined data
 # forest(res_B07, annotate=FALSE,refline=0, xlab="Beta (95%CI)", slab=rep("",length(res_B07$yi)), mlab=NA)
 forest( res_B07, annotate = FALSE,refline = 0, xlab = "Beta (95%CI)", 
-        slab = labs, mlab = expression(italic(P[meta])==~8.24E-11), psize = 3, order = c(7:1))
+        slab = B07.df$Region, mlab = expression(italic(P[meta])==~8.24E-11), psize = 3, order = c(7:1))
 mtext("HLA-B*07",side = 3, line = label.h, adj = 0, cex = 0.9)
 mtext(expression(italic(P[heterous])==~0.5941),side = 1, line = 4, cex = 0.8)
 
 # Plot combined data
 forest( res_C0302, annotate = FALSE,refline = 0, xlab = "Beta (95%CI)", 
-        slab = labs, mlab = expression(italic(P[meta])==~2.10E-8),psize = 3, order = c(7:1))
+        slab = C0302.df$Region, mlab = expression(italic(P[meta])==~2.10E-8),psize = 3, order = c(7:1))
 mtext("HLA-C*03:02",side = 3, line = label.h, adj = 0, cex = 0.9)
 mtext(expression(italic(P[heterous])==~0.2074),side = 1, line = 4, cex = 0.8)
 
@@ -285,20 +266,20 @@ mtext(expression(italic(P[heterous])==~0.2074),side = 1, line = 4, cex = 0.8)
 
 # Plot combined data
 forest( res_DRB03, annotate = FALSE,refline = 0, xlab = "Beta (95%CI)", 
-        slab = labs, mlab = expression(italic(P[meta])==~4.26E-8),psize = 3, order = c(7:1))
+        slab = DRB03.df$Region, mlab = expression(italic(P[meta])==~4.26E-8),psize = 3, order = c(7:1))
 mtext("HLA-DRB1*03",side = 3, line = label.h, adj = 0, cex = 0.9)
 mtext(expression(italic(P[heterous])==~0.4155),side = 1,line = 4, cex = 0.8)
 
 # Plot combined data
 forest( res_DRB07, annotate = FALSE,refline = 0, xlab = "Beta (95%CI)", 
-        slab = labs, mlab = expression(italic(P[meta])==~6.67E-11),psize = 3, order = c(7:1))
+        slab = DRB07.df$Region, mlab = expression(italic(P[meta])==~6.67E-11),psize = 3, order = c(7:1))
 mtext("HLA-DRB1*07",side = 3, line = label.h, adj = 0, cex = 0.9)
 mtext(expression(italic(P[heterous])==~0.1712),side = 1,line = 4, cex = 0.8)
 
 
 # Plot combined data
 forest( res_DRB12, annotate = FALSE,refline = 0, xlab = "Beta (95%CI)", 
-        slab = labs, mlab = expression(italic(P[meta])==~6.64E-9),psize = 3 ,order = c(7:1))
+        slab = DRB12.df$Region, mlab = expression(italic(P[meta])==~6.64E-9),psize = 3 ,order = c(7:1))
 mtext("HLA-DRB1*12",side = 3, line = label.h,adj = 0, cex = 0.9)
 mtext(expression(italic(P[heterous])==~0.9670),side = 1,line = 4, cex = 0.8)
 
