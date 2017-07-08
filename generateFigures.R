@@ -172,7 +172,7 @@ figure.3A +
 # @updated 2017-07-08 
 #----------------------------------------------------------------------
 
-setwd("C:\\Users\\Yisong\\Desktop\\RE3a_Figures")
+setwd("E:\\FuWai\\guo.data\\RE3a_Figures")
 # Load input data for all the alleles;
 B0702.df <- read.csv("B0702.csv", stringsAsFactors = FALSE)
 # # If OR's and 95% CI's, run these commented out lines
