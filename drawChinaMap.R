@@ -1,27 +1,40 @@
+# @author Yisong Zhen
+# @since  2017-09-30
+# @update 2017-01-01
 # the original protocol in Chinese
 # http://blog.sina.com.cn/s/blog_6bc5205e0102vma9.html
 # the map raw data source is downloaded 
 # from and saved in dir
+#---
 
 # suggested readings
 # http://stackoverflow.com/questions/29773240/triple-legend-in-ggplot2-with-point-shape-fill-and-color
 
 # install.packages("maptools")
-library(maptools)
-library(ggplot2)
-library(dplyr)
-library(plyr)
+# install.packages('rgdal',repos = 'http://cran.ism.ac.jp/')
+#chooseCRANmirror(graphics = getOption("menu.graphics"), ind = NULL,
+#                 useHTTPS = getOption("useHTTPS", FALSE),
+#                 local.only = FALSE)
+# https://stackoverflow.com/questions/33355444/r-when-trying-to-install-package-internetopenurl-failed
+# dependency error. you should install other package before go
+# 'mapproj'
+# ?
+# https://github.com/jknowles/eeptools/issues/34
+#---
+
+pkgs <- c('tidyverse', 'rgdal','sp', 'tmap')
+load.lib <- lapply(pkgs, require, character.only = TRUE) 
 
 
-setwd("C:\\Users\\Yisong\\Desktop\\ChinaMapDB\\1\\bou2_4m")
+rawmap.data.path <- file.path('E:\\FuWai\\guo.data\\rawdata\\') %>%
+                    paste('ChinaMap-2\\', sep = '') %>%
+                    paste('全国省级、地市级、县市级行政区划shp\\', sep = '') %>%
+                    paste('省界bou2_4m', sep = '')
 
-china.map.raw <- readShapePoly("bou2_4p.shp") 
-# plot(china.map.raw)
-"
-how to change to the Chinese characters
-"
-# http://bbs.pinggu.org/thread-2624815-5-1.html
-prov.name <- iconv(china.map.raw@data$NAME, from = 'GBK', to = 'UTF-8')
+chinamap.rawdata <- readOGR(rawmap.data.path,'bou2_4p')
+
+prov.name        <- chinamap.rawdata %>% 
+                              {iconv(.@data$NAME, from = 'GBK', to = 'UTF-8')}
  
 Northeast <- c('黑龙江省','吉林省','辽宁省')
 North     <- c('北京市','天津市','河北省','山西省','内蒙古自治区')
@@ -40,53 +53,46 @@ prov.group[prov.name %in% East]      <- 4
 prov.group[prov.name %in% Central]   <- 5
 prov.group[prov.name %in% South]     <- 6
 prov.group[prov.name %in% Southwest] <- 3
-prov.group[prov.name %in% Exclude]   <- 1
+prov.group[prov.name %in% Exclude]   <- 8
 
-
+#---
 # this is for Macau? I am not sure.
 # I change it from 0 to 8. I do not need the 0 group.
 # I assign this group to 8. It seems right, anyway.
-prov.group[899] <- 1
+#---
+prov.group[899] <- 8
 
-reg.shp      <- data.frame(provclass = prov.group,id = seq(0:924) - 1) 
-china.map    <- fortify(china.map.raw)
-china.map.df <- join(china.map, reg.shp, type = "full")
+chinamap.rawdata@data$regionClass  <- factor( prov.group, 
+                                              labels = c('Northeast','North','Northwest',
+                                                          'East', 'Central','South','Southwest', 'Excluded'))
+
+china.tmap <- tm_shape(shp = chinamap.rawdata, projection = 'hd') +
+              tm_borders(col = 'burlywood4') +
+              tm_fill(col = 'regionClass', title = 'sample collection regions') +
+              tm_compass() +
+              tm_scale_bar() +
+              tm_layout(frame = F)
+             
 
 
-ggplot(china.map.df, aes(x = long, y = lat, group = group, fill = provclass)) +
-     geom_polygon(colour = "grey40") +
-     scale_fill_gradient( name = 'Geographical regions',                         
-                          labels = rev( c('NorthWest','South','Central',
-                                     'East','SouthWest','North','NorthEast') ),
-                          low = "white", high = "black",
-                          breaks = seq(1:7),
-                          guide = 'legend') + 
-     coord_map("polyconic")  +
-     guides(fill = guide_legend(ncol = 2)) +
-     theme( panel.grid = element_blank(),
-            panel.background = element_blank(),
-            axis.text = element_blank(),
-            axis.ticks = element_blank(),
-            axis.title = element_blank(),
-            legend.position = c(0.2,0.98),
-            legend.title.align = 0.5
-          )
 
-#ggplot(china.map.df, aes(x = long, y = lat, group = group, fill = factor(provclass))) +
-#     geom_polygon(colour = "grey40") +
-#     scale_fill_manual(name = 'Geographical regions',values = c('red','purple','black','blue',
-#                                                           'green','yellow','brown','grey'), 
-#                         labels = rev(c('','SouthWest','South','Central',
-#                                      'East','NorthWest','North','NorthEast')),
-#                         guide  = 'legend') +
-#     guides(fill=guide_legend(ncol=2)) +
-#     coord_map("polyconic")  +
-#     theme( panel.grid = element_blank(),
-#            panel.background = element_blank(),
-#            axis.text = element_blank(),
-#            axis.ticks = element_blank(),
-#            axis.title = element_blank(),
-#            legend.position = c(0.3,0.98),
-#            legend.title.align = 0.5
-#          )
-#
+"
+ tm_legend( text.size = 1,
+                         title.size = 1.2,
+                         position = c('left','bottom'), 
+                         bg.color = 'white', 
+                         bg.alpha = .2, 
+                         frame    = 'gray50', 
+                         height   =.6, 
+                         hist.width   = .2,
+                         hist.height  = .2, 
+                         hist.bg.color = 'gray60', 
+                         hist.bg.alpha = .5)
+"
+# I tried, but failed.
+#---
+"
+china.tmap <- tm_shape(shp = chinamap.rawdata, projection = 'hd') +
+             tm_polygons()
+"
+
