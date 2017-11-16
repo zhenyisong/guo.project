@@ -7,12 +7,13 @@
 #---
 
 # install.packages('metafor', repo = 'http://mirrors.ustc.edu.cn/CRAN/')
-pkgs      <- c( 'metafor','tidyverse','magrittr','stringr','cowplot',
-                'rgdal','sp', 'tmap')
-load.libs <- lapply(pkgs, require, character.only = T)
+pkgs             <- c( 'metafor','tidyverse','magrittr','stringr','cowplot',
+                       'rgdal','sp', 'tmap','openxlsx','grid','gridExtra')
+load.libs        <- lapply(pkgs, require, character.only = T)
 
 guo.figures.path <- file.path('D:\\sourcecode\\guo.project\\figures')
 
+#---
 # China map
 # Figure1A
 #---
@@ -179,67 +180,24 @@ mtext.param.2     <- list( B07_2   = expression(italic(P)[heterous] == 0.7550),
 
 mtext.param.3     <- list( A   = 'A',  B = 'B', C = 'C', D = 'D')  
 
-args.plot.1 <- list(plot.1.results, mlab.param, mtext.param.1, mtext.param.2, mtext.param.3)
+args.plot.1       <- list(plot.1.results, mlab.param, mtext.param.1, mtext.param.2, mtext.param.3)
 invisible( pmap(args.plot.1, plot.img, lab.notation = lab.notation.1) )
 
 setwd(guo.figures.path)
 jpeg('Figure3.jpg', width = 1200, height = 802, units = 'mm',res = 150)
 invisible( pmap(args.plot.1, plot.img, lab.notation = lab.notation.1) )
 dev.off()
-"
-#---
-# Figure 2.
-#---
 
-plot.2.list.names <- c('B07_F', 'B07_M', 'DRB07_F', 'DRB07_M')
-plot.2.results    <- f.all.results[plot.2.list.names]
-
-mlab.param        <- list( B07_F   = 'HLA-B*07 Female Meta p-value=0.009', 
-                           B07_M   = 'HLA-B*07 Male Meta p-value=1.50E-9',
-                           DRB07_F = 'HLA-DRB1*07 Male Meta p-value=1.54E-10', 
-                           DRB07_M = 'HLA-DRB1*07 Female Meta p-value=0.0559' )
-mtext.param.1       <- list( B07_F   = 'HLA-B*07 Female ', 
-                             B07_M   = 'HLA-B*07 Male ',
-                             DRB07_F = 'HLA-DRB1*07 Male ', 
-                             DRB07_M = 'HLA-DRB1*07 Female ' )
-mtext.param.2       <- list( B07_F   = str_pad('p=0.4531', width = 25, side = 'left'), 
-                             B07_M   = str_pad('p=0.2848', width = 25, side = 'left'),
-                             DRB07_F = str_pad('p=0.3634', width = 25, side = 'left'), 
-                             DRB07_M = str_pad('p=0.0407', width = 25, side = 'left') )
-args.plot.1       <- list(plot.2.results, mlab.param, mtext.param.1, mtext.param.2)
-invisible( pmap(args.plot.1, plot.img, lab.notation = lab.notation.1) )
 
 #---
-# Figure 3.
-#---
-plot.3.list.names <- c('B07_FM', 'DRB07_FM')
-plot.3.results    <- f.all.results[plot.3.list.names]
-lab.notation.2 <- c( 'Southwest Female', 'Northeast Female', 'North Female',
-                     'East Female', 'Northwest Female', 'Central Female',
-                     'South Female', 'Southwest Male', 'Northeast Male',
-                     'North Male', 'East Male','Northwest Male',
-                     'Central Male','South Male')
-mlab.param        <- list( B07_FM   = 'Meta p-value=0.009', 
-                           DRB07_FM = 'Meta p-value=0.0559')
-mtext.param.1       <- list( B07_FM   = 'HLA-B*07 Female ', 
-                             DRB07_FM = 'HLA-DRB1*07 Female ' )
-mtext.param.2       <- list( B07_FM   = str_pad('p=0.4531', width = 25, side = 'left'), 
-                             DRB07_FM = str_pad('p=0.0407', width = 25, side = 'left') )
-args.plot.1       <- list(plot.3.results, mlab.param, mtext.param.1, mtext.param.2)
-par(mfrow = c(2,1), mar = c(5,4,1,1))
-invisible( pmap(args.plot.1, plot.img, lab.notation = lab.notation.2) )
-"
-
-#---
-# Figure 4 boxplot
-# this change to Figure 2.
-# the above figures are deprecated.
+# Figure 2 
+#
 #---
 
 raw.data.path <- file.path('D:\\sourcecode\\guo.project\\update.data')
 
 
-file.names <- list('DRB07_F.csv', 'DRB07_M.csv', 'B07_F.csv','B07_M.csv')
+file.names    <- list('DRB07_F.csv', 'DRB07_M.csv', 'B07_F.csv','B07_M.csv')
 
 read.forest.data <- function(filename, lab.notation) {
     setwd(raw.data.path)
@@ -266,14 +224,73 @@ boxplot.data <- map( file.names, read.forest.data,
 
 B.07.pval    <- paste( 'italic(\'P\')[italic(\'heterogeneity\')]', ' == 0.00767', sep = '')
 DRB1.07.pval <- paste( 'italic(\'P\')[italic(\'heterogeneity\')]', ' == 0.00058', sep = '')
+
+#--
+# I refenced the following code
+# https://www.r-bloggers.com/boxplot-with-mean-and-standard-deviation-in-ggplot2-plus-jitter/
+# function for computing mean, DS, max and min values
+#---
+
+"
+get_five_nums <- function(x) {
+  five.nums         <- c( min(x), mean(x) - sd(x), 
+                          mean(x), mean(x) + sd(x), max(x))
+  names(five.nums ) <- c('ymin', 'lower', 'middle', 'upper', 'ymax')
+  return(five.nums)
+}
+"
+
+# manual draw the map
+#
+box.width        <- 0.3
+ymin.plot.1      <- c( boxplot.data %>% filter(groups == 1) %>% 
+                       select(beta.point)%>% min(),
+                       boxplot.data %>% filter(groups == 2) %>%
+                       select(beta.point) %>% min())
+middle.plot.1    <- c(0.03909,0.0993)
+female.sd.1      <- 0.014958
+male.sd.1        <- 0.016
+lower.plot.1     <- c( middle.plot.1[1] - female.sd.1,
+                       middle.plot.1[2] - male.sd.1 )
+upper.plot.1     <- c( middle.plot.1[1] + female.sd.1,
+                       middle.plot.1[2] + male.sd.1 )
+ymax.plot.1      <- c( boxplot.data %>% filter(groups == 1) %>% 
+                       select(beta.point)%>% unlist %>% max(),
+                       boxplot.data %>% filter(groups == 2) %>%
+                       select(beta.point) %>% unlist %>% max())
+               
+
+five.nums.plot.1 <- data.frame( ymin   = ymin.plot.1, lower = lower.plot.1,
+                                middle = middle.plot.1, upper = upper.plot.1,
+                                ymax   = ymax.plot.1,  groups = factor(1:2))
+
 plot.1 <- boxplot.data %>%
-          filter(groups == 1 | groups ==2) %>%
-          ggplot(aes( x = groups, y = beta.point)) +
+          filter(groups == 1 | groups == 2) %>%
+          ggplot(data = ., aes(x = groups, y = beta.point)) +
+          geom_segment( aes( x    = 1 - box.width, y    = five.nums.plot.1[['upper']][1], 
+                             xend = 1 + box.width, yend = five.nums.plot.1[['upper']][1])) +
+          geom_segment( aes( x    = 1 - box.width, y    = five.nums.plot.1[['lower']][1], 
+                             xend = 1 + box.width, yend = five.nums.plot.1[['lower']][1])) +
+          geom_segment( aes( x    = 1 - box.width, y    = five.nums.plot.1[['upper']][1], 
+                             xend = 1 - box.width, yend = five.nums.plot.1[['lower']][1])) +
+          geom_segment( aes( x    = 1 + box.width, y    = five.nums.plot.1[['upper']][1], 
+                             xend = 1 + box.width, yend = five.nums.plot.1[['lower']][1])) +
+          geom_segment( aes( x    = 1 - box.width, y    = five.nums.plot.1[['middle']][1], 
+                             xend = 1 + box.width, yend = five.nums.plot.1[['middle']][1]),
+                        size = 1) +
+          geom_segment( aes( x    = 2 - box.width, y    = five.nums.plot.1[['upper']][2], 
+                             xend = 2 + box.width, yend = five.nums.plot.1[['upper']][2])) +
+          geom_segment( aes( x    = 2 - box.width, y    = five.nums.plot.1[['lower']][2], 
+                             xend = 2 + box.width, yend = five.nums.plot.1[['lower']][2])) +
+          geom_segment( aes( x    = 2 - box.width, y    = five.nums.plot.1[['upper']][2], 
+                             xend = 2 - box.width, yend = five.nums.plot.1[['lower']][2])) +
+          geom_segment( aes( x    = 2 + box.width, y    = five.nums.plot.1[['upper']][2], 
+                             xend = 2 + box.width, yend = five.nums.plot.1[['lower']][2])) +
+          geom_segment( aes( x    = 2 - box.width, y    = five.nums.plot.1[['middle']][2], 
+                             xend = 2 + box.width, yend = five.nums.plot.1[['middle']][2]),
+                        size = 1) +
           geom_point( aes(fill = groups), , 
-                      shape = 16 , size = 2, alpha = 0.5, show.legend = F)  +   
-          stat_summary( fun.data = 'mean_sdl', fun.args = list(mult = 1),
-                        geom = 'crossbar', color = 'red', width = .1) +
-          #stat_summary(fun.y = mean, geom = 'point', color = 'red') +
+                      shape = 16 , size = 2, alpha = 0.5, show.legend = F)  + 
           scale_x_discrete(labels = c('Female','Male')) +
           scale_y_continuous(limits = c(-0.1,0.18)) +
           geom_segment(aes(x = 1, y = 0.15, xend = 2, yend = 0.15) ) +
@@ -283,7 +300,7 @@ plot.1 <- boxplot.data %>%
                      label = B.07.pval, 
                      vjust = 'middle',
                      parse = T)  + 
-          geom_text(aes(x = 1.5, y = 0.18),label = 'B * 07') +
+          geom_text(aes(x = 1.5, y = 0.18),label = 'B*07') +
           theme_classic() +
           ylab(label = 'Beta') +
           theme( axis.text.x  = element_text( size = 14),
@@ -291,12 +308,57 @@ plot.1 <- boxplot.data %>%
                  axis.title.y = element_text(size = 14) ) +
           theme( aspect.ratio = 1)
 
+# parameters for second group
+#---
+
+ymin.plot.2     <- c( boxplot.data %>% filter(groups == 3) %>% 
+                      select(beta.point)%>% min(),
+                      boxplot.data %>% filter(groups == 4) %>%
+                      select(beta.point) %>% min())
+middle.plot.2   <- c(0.018112,0.066471)
+female.sd.2     <- 0.009476
+male.sd.2       <- 0.010375
+lower.plot.2    <- c( middle.plot.2[1] - female.sd.2,
+                      middle.plot.2[2] - male.sd.2 )
+upper.plot.2    <- c( middle.plot.2[1] + female.sd.2,
+                      middle.plot.2[2] + male.sd.2 )
+ymax.plot.2     <- c( boxplot.data %>% filter(groups == 3) %>% 
+                      select(beta.point)%>% unlist %>% max(),
+                      boxplot.data %>% filter(groups == 4) %>%
+                      select(beta.point) %>% unlist %>% max())
+
+
+five.nums.plot.2 <- data.frame( ymin   = ymin.plot.2, lower   = lower.plot.2,
+                                middle = middle.plot.2, upper = upper.plot.2,
+                                ymax   = ymax.plot.2,  groups = factor(1:2))
+
 plot.2 <- boxplot.data %>%
           filter(groups == 3 | groups == 4) %>%
           ggplot(aes( x = groups, y = beta.point)) +
-          geom_boxplot(alpha = 0.5, outlier.shape = NA) +
-          geom_point( aes(fill = groups), , 
-                       shape = 16 , size = 1.4, show.legend = F)  +        
+          geom_segment( aes( x    = 1 - box.width, y    = five.nums.plot.2[['upper']][1], 
+                             xend = 1 + box.width, yend = five.nums.plot.2[['upper']][1])) +
+          geom_segment( aes( x    = 1 - box.width, y    = five.nums.plot.2[['lower']][1], 
+                             xend = 1 + box.width, yend = five.nums.plot.2[['lower']][1])) +
+          geom_segment( aes( x    = 1 - box.width, y    = five.nums.plot.2[['upper']][1], 
+                             xend = 1 - box.width, yend = five.nums.plot.2[['lower']][1])) +
+          geom_segment( aes( x    = 1 + box.width, y    = five.nums.plot.2[['upper']][1], 
+                             xend = 1 + box.width, yend = five.nums.plot.2[['lower']][1])) +
+          geom_segment( aes( x    = 1 - box.width, y    = five.nums.plot.2[['middle']][1], 
+                             xend = 1 + box.width, yend = five.nums.plot.2[['middle']][1]),
+                        size = 1) + 
+          geom_segment( aes( x    = 2 - box.width, y    = five.nums.plot.2[['upper']][2], 
+                             xend = 2 + box.width, yend = five.nums.plot.2[['upper']][2])) +
+          geom_segment( aes( x    = 2 - box.width, y    = five.nums.plot.2[['lower']][2], 
+                             xend = 2 + box.width, yend = five.nums.plot.2[['lower']][2])) +
+          geom_segment( aes( x    = 2 - box.width, y    = five.nums.plot.2[['upper']][2], 
+                             xend = 2 - box.width, yend = five.nums.plot.2[['lower']][2])) +
+          geom_segment( aes( x    = 2 + box.width, y    = five.nums.plot.2[['upper']][2], 
+                             xend = 2 + box.width, yend = five.nums.plot.2[['lower']][2])) +
+          geom_segment( aes( x    = 2 - box.width, y    = five.nums.plot.2[['middle']][2], 
+                             xend = 2 + box.width, yend = five.nums.plot.2[['middle']][2]),
+                        size = 1) +
+          geom_point( aes(fill = groups), 
+                      shape = 16 , size = 2, alpha = 0.5, show.legend = F)  + 
           scale_x_discrete(labels = c('Female','Male')) +
           scale_y_continuous(limits = c(-0.1,0.18)) +
           geom_segment(aes(x = 1, y = 0.15, xend = 2, yend = 0.15) ) +
@@ -308,6 +370,7 @@ plot.2 <- boxplot.data %>%
                      parse = T)  + 
           theme_classic() +
           ylab(label = 'Beta') +
+          geom_text(aes(x = 1.5, y = 0.18),label = 'DRB1*07') +
           theme( axis.text.x  = element_text( size = 14),
                  axis.title.x = element_blank(),
                  axis.title.y = element_text(size = 14) ) +
@@ -316,4 +379,62 @@ plot.2 <- boxplot.data %>%
 figure4.boxplot <- plot_grid( plot.1, plot.2, labels = c('A','B'), 
                               ncol = 2, nrow = 1)
 setwd(guo.figures.path)
-ggsave( 'Figure4.jpeg', plot = figure4.boxplot, dpi = 600, units = 'mm')
+ggsave( 'Figure4.jpeg', plot = figure4.boxplot, 
+        dpi = 600, units = 'mm', width = 300)
+
+#---
+# Figure 4C
+# completed in 2017-11-16
+#
+#---
+
+raw.data.path     <- 'D:\\sourcecode\\guo.project\\update.data'
+setwd(raw.data.path)
+figure4C.filename <- 'haplotype.xlsx'
+figure4C.df       <- read.xlsx( figure4C.filename, sheet = 1, 
+                                colNames = TRUE)
+
+dev.off()
+figure4C.table <- tableGrob(figure4C.df, rows = NULL)
+
+find.cell <- function(table, row, col, name = 'core-fg') {
+    layout <- table$layout
+    which( layout$t    == row & 
+           layout$l    == col & 
+           layout$name == name)
+}
+
+cell.in.x <- c( 2,2,
+                rep(3:4, times = 3),
+                rep(5:6, each  = 2),
+                rep(7:9, each  = 2),
+                rep(10,3),
+                rep(11:21, each = 2))
+
+cell.in.y <- c( 2,3,
+                rep(c(2,3,5),times = 2),
+                2,5,2,4,
+                1,2,1,5,1,4,
+                1,3,4,
+                rep(3:4, times = 11))
+
+cell.len   <- length(cell.in.x)
+cell.fill  <- 'green'
+
+for (i in c(1 : cell.len) ){
+    cell.x = cell.in.x[i]
+    cell.y = cell.in.y[i]
+    ind <- find.cell(figure4C.table, cell.x, cell.y, 'core-bg')
+    if (cell.x >= 14) {
+        figure4C.table$grobs[ind][[1]][['gp']] <- gpar(fill = 'red', col = NA)
+    }
+    else {
+        figure4C.table$grobs[ind][[1]][['gp']] <- gpar(fill = 'green', col = NA)
+    }
+}
+
+grid.newpage()
+grid.draw(figure4C.table)
+
+setwd(guo.figures.path)
+ggsave('Figure4C.jpeg', figure4C.table, height = 150, dpi = 600, unit = 'mm')
