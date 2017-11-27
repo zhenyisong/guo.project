@@ -17,6 +17,8 @@ guo.figures.path <- file.path('D:\\sourcecode\\guo.project\\figures')
 # China map
 # Figure1A
 #---
+
+#---
 # the original protocol in Chinese
 # http://blog.sina.com.cn/s/blog_6bc5205e0102vma9.html
 # the map raw data source is downloaded 
@@ -133,12 +135,7 @@ names(f.all.results) <- rawdata.file.names %>% unlist %>%
 
 
 
-#---
-#  Working on side by side forest plot
-#  mfrow meaning number of row, 2 is how many panel will be side by side;
-#  mar meaning margin
-#---
-par(mfrow = c(2,2), mar   = c(5,4,2,2))
+
 
 
 #---
@@ -181,15 +178,21 @@ mtext.param.2     <- list( B07_2   = expression(italic(P)[heterous] == 0.7550),
 mtext.param.3     <- list( A   = 'A',  B = 'B', C = 'C', D = 'D')  
 
 args.plot.1       <- list(plot.1.results, mlab.param, mtext.param.1, mtext.param.2, mtext.param.3)
-invisible( pmap(args.plot.1, plot.img, lab.notation = lab.notation.1) )
-
+dev.off()
 setwd(guo.figures.path)
-jpeg('Figure3.jpg', width = 1200, height = 802, units = 'mm',res = 150)
-invisible( pmap(args.plot.1, plot.img, lab.notation = lab.notation.1) )
+jpeg(file = 'Figure3.jpg', width = 800, height = 900, units = 'mm', res = 600, pointsize = 50)
+#---
+#  Working on side by side forest plot
+#  mfrow meaning number of row, 2 is how many panel will be side by side;
+#  mar meaning margin
+#---
+par(mfrow = c(2,2), mar   = c(5,4,2,2))
+pmap(args.plot.1, plot.img, lab.notation = lab.notation.1)
 dev.off()
 
 
 #---
+#
 # Figure 2 
 #
 #---
@@ -211,7 +214,9 @@ format.df <- function(data.lists) {
     count.i <- 1
     for(one.list in data.lists) {
         buffle <- one.list %$% 
-                  data.frame( beta.point = beta, groups = as.factor(count.i) )
+                  data.frame( beta.point = beta,
+                              sd.error   = se, 
+                              groups     = as.factor(count.i) )
         count.i <- count.i + 1
         data.df <- rbind(data.df, buffle)
     }
@@ -226,23 +231,17 @@ B.07.pval    <- paste( 'italic(\'P\')[italic(\'heterogeneity\')]', ' == 0.00767'
 DRB1.07.pval <- paste( 'italic(\'P\')[italic(\'heterogeneity\')]', ' == 0.00058', sep = '')
 
 #--
-# I refenced the following code
+# I referenced the following code
 # https://www.r-bloggers.com/boxplot-with-mean-and-standard-deviation-in-ggplot2-plus-jitter/
 # function for computing mean, DS, max and min values
 #---
 
-"
-get_five_nums <- function(x) {
-  five.nums         <- c( min(x), mean(x) - sd(x), 
-                          mean(x), mean(x) + sd(x), max(x))
-  names(five.nums ) <- c('ymin', 'lower', 'middle', 'upper', 'ymax')
-  return(five.nums)
-}
-"
 
 # manual draw the map
 #
 box.width        <- 0.3
+error.bar.jitter  <- 0.05
+error.bar.width   <- 0.01
 ymin.plot.1      <- c( boxplot.data %>% filter(groups == 1) %>% 
                        select(beta.point)%>% min(),
                        boxplot.data %>% filter(groups == 2) %>%
@@ -264,9 +263,8 @@ five.nums.plot.1 <- data.frame( ymin   = ymin.plot.1, lower = lower.plot.1,
                                 middle = middle.plot.1, upper = upper.plot.1,
                                 ymax   = ymax.plot.1,  groups = factor(1:2))
 
-plot.1 <- boxplot.data %>%
-          filter(groups == 1 | groups == 2) %>%
-          ggplot(data = ., aes(x = groups, y = beta.point)) +
+plot.1 <- ggplot() +
+
           geom_segment( aes( x    = 1 - box.width, y    = five.nums.plot.1[['upper']][1], 
                              xend = 1 + box.width, yend = five.nums.plot.1[['upper']][1])) +
           geom_segment( aes( x    = 1 - box.width, y    = five.nums.plot.1[['lower']][1], 
@@ -289,18 +287,258 @@ plot.1 <- boxplot.data %>%
           geom_segment( aes( x    = 2 - box.width, y    = five.nums.plot.1[['middle']][2], 
                              xend = 2 + box.width, yend = five.nums.plot.1[['middle']][2]),
                         size = 1) +
-          geom_point( aes(fill = groups), , 
-                      shape = 16 , size = 2, alpha = 0.5, show.legend = F)  + 
-          scale_x_discrete(labels = c('Female','Male')) +
-          scale_y_continuous(limits = c(-0.1,0.18)) +
-          geom_segment(aes(x = 1, y = 0.15, xend = 2, yend = 0.15) ) +
-          geom_segment(aes(x = 1, y = 0.14, xend = 1, yend = 0.15) ) +
-          geom_segment(aes(x = 2, y = 0.14, xend = 2, yend = 0.15) ) +
-          geom_text( aes(x = 1.5, y = 0.16), 
+
+          geom_point(aes( x = 1 - 3 * error.bar.jitter, y = boxplot.data[['beta.point']][1])) +
+          geom_segment( aes(x     = 1 - 3 * error.bar.jitter, y    = boxplot.data[['beta.point']][1] - 
+                                                                     boxplot.data[['sd.error']][1],
+                            xend  = 1 - 3 * error.bar.jitter, yend = boxplot.data[['beta.point']][1] +
+                                                                     boxplot.data[['sd.error']][1])) +
+          geom_segment( aes( x    = 1 - 3 * error.bar.jitter - 
+                                    error.bar.width,        y    = boxplot.data[['beta.point']][1] - 
+                                                                   boxplot.data[['sd.error']][1],
+                             xend = 1 - 3 * error.bar.jitter +
+                                    error.bar.width,         yend = boxplot.data[['beta.point']][1] - 
+                                                                    boxplot.data[['sd.error']][1])) +
+          geom_segment( aes( x    = 1 - 3 * error.bar.jitter - 
+                                    error.bar.width,        y    = boxplot.data[['beta.point']][1] + 
+                                                                   boxplot.data[['sd.error']][1],
+                             xend = 1 - 3 * error.bar.jitter +
+                                    error.bar.width,         yend = boxplot.data[['beta.point']][1] +
+                                                                    boxplot.data[['sd.error']][1])) +
+
+          geom_point(aes( x = 1 - 2 * error.bar.jitter, y = boxplot.data[['beta.point']][2])) +
+          geom_segment( aes(x     = 1 - 2 * error.bar.jitter, y    = boxplot.data[['beta.point']][2] - 
+                                                                     boxplot.data[['sd.error']][2],
+                            xend  = 1 - 2 * error.bar.jitter, yend = boxplot.data[['beta.point']][2] +
+                                                                     boxplot.data[['sd.error']][2])) +
+          geom_segment( aes( x    = 1 - 2 * error.bar.jitter - 
+                                    error.bar.width,        y    = boxplot.data[['beta.point']][2] - 
+                                                                   boxplot.data[['sd.error']][2],
+                             xend = 1 - 2 * error.bar.jitter +
+                                    error.bar.width,         yend = boxplot.data[['beta.point']][2] - 
+                                                                    boxplot.data[['sd.error']][2])) +
+          geom_segment( aes( x    = 1 - 2 * error.bar.jitter - 
+                                    error.bar.width,        y    = boxplot.data[['beta.point']][2] + 
+                                                                   boxplot.data[['sd.error']][2],
+                             xend = 1 - 2 * error.bar.jitter +
+                                    error.bar.width,         yend = boxplot.data[['beta.point']][2] + 
+                                                                    boxplot.data[['sd.error']][2])) +
+          geom_point(aes( x = 1 - 1 * error.bar.jitter, y = boxplot.data[['beta.point']][3])) +
+          geom_segment( aes(x     = 1 - 1 * error.bar.jitter, y    = boxplot.data[['beta.point']][3] - 
+                                                                     boxplot.data[['sd.error']][3],
+                            xend  = 1 - 1 * error.bar.jitter, yend = boxplot.data[['beta.point']][3] +
+                                                                     boxplot.data[['sd.error']][3])) +
+          geom_segment( aes( x    = 1 - 1 * error.bar.jitter - 
+                                    error.bar.width,        y    = boxplot.data[['beta.point']][3] - 
+                                                                   boxplot.data[['sd.error']][3],
+                             xend = 1 - 1 * error.bar.jitter +
+                                    error.bar.width,         yend = boxplot.data[['beta.point']][3] - 
+                                                                    boxplot.data[['sd.error']][3])) +
+          geom_segment( aes( x    = 1 - 1 * error.bar.jitter - 
+                                    error.bar.width,        y    = boxplot.data[['beta.point']][3] + 
+                                                                   boxplot.data[['sd.error']][3],
+                             xend = 1 - 1 * error.bar.jitter +
+                                    error.bar.width,         yend = boxplot.data[['beta.point']][3] + 
+                                                                    boxplot.data[['sd.error']][3])) +
+          geom_point(aes( x = 1 - 0 * error.bar.jitter, y = boxplot.data[['beta.point']][4])) +
+          geom_segment( aes(x     = 1 - 0 * error.bar.jitter, y    = boxplot.data[['beta.point']][4] - 
+                                                                     boxplot.data[['sd.error']][4],
+                            xend  = 1 - 0 * error.bar.jitter, yend = boxplot.data[['beta.point']][4] +
+                                                                     boxplot.data[['sd.error']][4])) +
+          geom_segment( aes( x    = 1 - 0 * error.bar.jitter - 
+                                    error.bar.width,        y    = boxplot.data[['beta.point']][4] - 
+                                                                   boxplot.data[['sd.error']][4],
+                             xend = 1 - 0 * error.bar.jitter +
+                                    error.bar.width,         yend = boxplot.data[['beta.point']][4] - 
+                                                                    boxplot.data[['sd.error']][4])) +
+          geom_segment( aes( x    = 1 - 0 * error.bar.jitter - 
+                                    error.bar.width,        y    = boxplot.data[['beta.point']][4] + 
+                                                                   boxplot.data[['sd.error']][4],
+                             xend = 1 - 0 * error.bar.jitter +
+                                    error.bar.width,         yend = boxplot.data[['beta.point']][4] + 
+                                                                    boxplot.data[['sd.error']][4])) +
+
+          geom_point(aes( x = 1 + 1 * error.bar.jitter, y = boxplot.data[['beta.point']][5])) +
+          geom_segment( aes(x     = 1 + 1 * error.bar.jitter, y    = boxplot.data[['beta.point']][5] - 
+                                                                     boxplot.data[['sd.error']][5],
+                            xend  = 1 + 1 * error.bar.jitter, yend = boxplot.data[['beta.point']][5] +
+                                                                     boxplot.data[['sd.error']][5])) +
+          geom_segment( aes( x    = 1 + 1 * error.bar.jitter - 
+                                    error.bar.width,        y    = boxplot.data[['beta.point']][5] - 
+                                                                   boxplot.data[['sd.error']][5],
+                             xend = 1 + 1 * error.bar.jitter +
+                                    error.bar.width,         yend = boxplot.data[['beta.point']][5] - 
+                                                                    boxplot.data[['sd.error']][5])) +
+          geom_segment( aes( x    = 1 + 1 * error.bar.jitter - 
+                                    error.bar.width,        y    = boxplot.data[['beta.point']][5] +
+                                                                   boxplot.data[['sd.error']][5],
+                             xend = 1 + 1 * error.bar.jitter +
+                                    error.bar.width,         yend = boxplot.data[['beta.point']][5] +
+                                                                    boxplot.data[['sd.error']][5])) +
+          geom_point(aes( x = 1 + 2 * error.bar.jitter, y = boxplot.data[['beta.point']][6])) +
+          geom_segment( aes(x     = 1 + 2 * error.bar.jitter, y    = boxplot.data[['beta.point']][6] - 
+                                                                     boxplot.data[['sd.error']][6],
+                            xend  = 1 + 2 * error.bar.jitter, yend = boxplot.data[['beta.point']][6] +
+                                                                     boxplot.data[['sd.error']][6])) +
+          geom_segment( aes( x    = 1 + 2 * error.bar.jitter - 
+                                    error.bar.width,        y    = boxplot.data[['beta.point']][6] - 
+                                                                   boxplot.data[['sd.error']][6],
+                             xend = 1 + 2 * error.bar.jitter +
+                                    error.bar.width,         yend = boxplot.data[['beta.point']][6] - 
+                                                                    boxplot.data[['sd.error']][6])) +
+          geom_segment( aes( x    = 1 + 2 * error.bar.jitter - 
+                                    error.bar.width,        y    = boxplot.data[['beta.point']][6] +
+                                                                   boxplot.data[['sd.error']][6],
+                             xend = 1 + 2 * error.bar.jitter +
+                                    error.bar.width,         yend = boxplot.data[['beta.point']][6] +
+                                                                    boxplot.data[['sd.error']][6])) +
+          geom_point(aes( x = 1 + 3 * error.bar.jitter, y = boxplot.data[['beta.point']][7])) +
+          geom_segment( aes(x     = 1 + 3 * error.bar.jitter, y    = boxplot.data[['beta.point']][7] - 
+                                                                     boxplot.data[['sd.error']][7],
+                            xend  = 1 + 3 * error.bar.jitter, yend = boxplot.data[['beta.point']][7] +
+                                                                     boxplot.data[['sd.error']][7])) +
+          geom_segment( aes( x    = 1 + 3 * error.bar.jitter - 
+                                    error.bar.width,        y    = boxplot.data[['beta.point']][7] - 
+                                                                   boxplot.data[['sd.error']][7],
+                             xend = 1 + 3 * error.bar.jitter +
+                                    error.bar.width,         yend = boxplot.data[['beta.point']][7] - 
+                                                                    boxplot.data[['sd.error']][7])) +
+          geom_segment( aes( x    = 1 + 3 * error.bar.jitter - 
+                                    error.bar.width,        y    = boxplot.data[['beta.point']][7] +
+                                                                   boxplot.data[['sd.error']][7],
+                             xend = 1 + 3 * error.bar.jitter +
+                                    error.bar.width,         yend = boxplot.data[['beta.point']][7] +
+                                                                    boxplot.data[['sd.error']][7])) +
+
+          geom_point(aes( x = 2 - 3 * error.bar.jitter, y = boxplot.data[['beta.point']][8])) +
+          geom_segment( aes(x     = 2 - 3 * error.bar.jitter, y    = boxplot.data[['beta.point']][8] - 
+                                                                     boxplot.data[['sd.error']][8],
+                            xend  = 2 - 3 * error.bar.jitter, yend = boxplot.data[['beta.point']][8] +
+                                                                     boxplot.data[['sd.error']][8])) +
+          geom_segment( aes( x    = 2 - 3 * error.bar.jitter - 
+                                    error.bar.width,        y    = boxplot.data[['beta.point']][8] - 
+                                                                   boxplot.data[['sd.error']][8],
+                             xend = 2 - 3 * error.bar.jitter +
+                                    error.bar.width,         yend = boxplot.data[['beta.point']][8] - 
+                                                                    boxplot.data[['sd.error']][8])) +
+          geom_segment( aes( x    = 2 - 3 * error.bar.jitter - 
+                                    error.bar.width,        y    = boxplot.data[['beta.point']][8] + 
+                                                                   boxplot.data[['sd.error']][8],
+                             xend = 2 - 3 * error.bar.jitter +
+                                    error.bar.width,         yend = boxplot.data[['beta.point']][8] +
+                                                                    boxplot.data[['sd.error']][8])) +            
+          geom_point(aes( x = 2 - 2 * error.bar.jitter, y = boxplot.data[['beta.point']][9])) +
+          geom_segment( aes(x     = 2 - 2 * error.bar.jitter, y    = boxplot.data[['beta.point']][9] - 
+                                                                     boxplot.data[['sd.error']][9],
+                            xend  = 2 - 2 * error.bar.jitter, yend = boxplot.data[['beta.point']][9] +
+                                                                     boxplot.data[['sd.error']][9])) +
+          geom_segment( aes( x    = 2 - 2 * error.bar.jitter - 
+                                    error.bar.width,        y    = boxplot.data[['beta.point']][9] - 
+                                                                   boxplot.data[['sd.error']][9],
+                             xend = 2 - 2 * error.bar.jitter +
+                                    error.bar.width,         yend = boxplot.data[['beta.point']][9] - 
+                                                                    boxplot.data[['sd.error']][9])) +
+          geom_segment( aes( x    = 2 - 2 * error.bar.jitter - 
+                                    error.bar.width,        y    = boxplot.data[['beta.point']][9] + 
+                                                                   boxplot.data[['sd.error']][9],
+                             xend = 2 - 2 * error.bar.jitter +
+                                    error.bar.width,         yend = boxplot.data[['beta.point']][9] +
+                                                                    boxplot.data[['sd.error']][9])) +
+          geom_point(aes( x = 2 - 1 * error.bar.jitter, y = boxplot.data[['beta.point']][10])) +
+          geom_segment( aes(x     = 2 - 1 * error.bar.jitter, y    = boxplot.data[['beta.point']][10] - 
+                                                                     boxplot.data[['sd.error']][10],
+                            xend  = 2 - 1 * error.bar.jitter, yend = boxplot.data[['beta.point']][10] +
+                                                                     boxplot.data[['sd.error']][10])) +
+          geom_segment( aes( x    = 2 - 1 * error.bar.jitter - 
+                                    error.bar.width,        y    = boxplot.data[['beta.point']][10] - 
+                                                                   boxplot.data[['sd.error']][10],
+                             xend = 2 - 1 * error.bar.jitter +
+                                    error.bar.width,         yend = boxplot.data[['beta.point']][10] - 
+                                                                    boxplot.data[['sd.error']][10])) +
+          geom_segment( aes( x    = 2 - 1 * error.bar.jitter - 
+                                    error.bar.width,        y    = boxplot.data[['beta.point']][10] + 
+                                                                   boxplot.data[['sd.error']][10],
+                             xend = 2 - 1 * error.bar.jitter +
+                                    error.bar.width,         yend = boxplot.data[['beta.point']][10] +
+                                                                    boxplot.data[['sd.error']][10])) +
+          geom_point(aes( x = 2 - 0 * error.bar.jitter, y = boxplot.data[['beta.point']][11])) +
+          geom_segment( aes(x     = 2 - 0 * error.bar.jitter, y    = boxplot.data[['beta.point']][11] - 
+                                                                     boxplot.data[['sd.error']][11],
+                            xend  = 2 - 0 * error.bar.jitter, yend = boxplot.data[['beta.point']][11] +
+                                                                     boxplot.data[['sd.error']][11])) +
+          geom_segment( aes( x    = 2 - 0 * error.bar.jitter - 
+                                    error.bar.width,        y    = boxplot.data[['beta.point']][11] - 
+                                                                   boxplot.data[['sd.error']][11],
+                             xend = 2 - 0 * error.bar.jitter +
+                                    error.bar.width,         yend = boxplot.data[['beta.point']][11] - 
+                                                                    boxplot.data[['sd.error']][11])) +
+          geom_segment( aes( x    = 2 - 0 * error.bar.jitter - 
+                                    error.bar.width,        y    = boxplot.data[['beta.point']][11] + 
+                                                                   boxplot.data[['sd.error']][11],
+                             xend = 2 - 0 * error.bar.jitter +
+                                    error.bar.width,         yend = boxplot.data[['beta.point']][11] +
+                                                                    boxplot.data[['sd.error']][11])) +
+          geom_point(aes( x = 2 + 1 * error.bar.jitter, y = boxplot.data[['beta.point']][12])) +
+          geom_segment( aes(x     = 2 + 1 * error.bar.jitter, y    = boxplot.data[['beta.point']][12] - 
+                                                                     boxplot.data[['sd.error']][12],
+                            xend  = 2 + 1 * error.bar.jitter, yend = boxplot.data[['beta.point']][12] +
+                                                                     boxplot.data[['sd.error']][12])) +
+          geom_segment( aes( x    = 2 + 1 * error.bar.jitter - 
+                                    error.bar.width,        y    = boxplot.data[['beta.point']][12] - 
+                                                                   boxplot.data[['sd.error']][12],
+                             xend = 2 + 1 * error.bar.jitter +
+                                    error.bar.width,         yend = boxplot.data[['beta.point']][12] - 
+                                                                    boxplot.data[['sd.error']][12])) +
+          geom_segment( aes( x    = 2 + 1 * error.bar.jitter - 
+                                    error.bar.width,        y    = boxplot.data[['beta.point']][12] + 
+                                                                   boxplot.data[['sd.error']][12],
+                             xend = 2 + 1 * error.bar.jitter +
+                                    error.bar.width,         yend = boxplot.data[['beta.point']][12] +
+                                                                    boxplot.data[['sd.error']][12])) +
+          geom_point(aes( x = 2 + 2 * error.bar.jitter, y = boxplot.data[['beta.point']][13])) +
+          geom_segment( aes(x     = 2 + 2 * error.bar.jitter, y    = boxplot.data[['beta.point']][13] - 
+                                                                     boxplot.data[['sd.error']][13],
+                            xend  = 2 + 2 * error.bar.jitter, yend = boxplot.data[['beta.point']][13] +
+                                                                     boxplot.data[['sd.error']][13])) +
+          geom_segment( aes( x    = 2 + 2 * error.bar.jitter - 
+                                    error.bar.width,        y    = boxplot.data[['beta.point']][13] - 
+                                                                   boxplot.data[['sd.error']][13],
+                             xend = 2 + 2 * error.bar.jitter +
+                                    error.bar.width,         yend = boxplot.data[['beta.point']][13] - 
+                                                                    boxplot.data[['sd.error']][13])) +
+          geom_segment( aes( x    = 2 + 2 * error.bar.jitter - 
+                                    error.bar.width,        y    = boxplot.data[['beta.point']][13] + 
+                                                                   boxplot.data[['sd.error']][13],
+                             xend = 2 + 2 * error.bar.jitter +
+                                    error.bar.width,         yend = boxplot.data[['beta.point']][13] +
+                                                                    boxplot.data[['sd.error']][13])) +
+          geom_point(aes( x = 2 + 3 * error.bar.jitter, y = boxplot.data[['beta.point']][14])) +
+          geom_segment( aes(x     = 2 + 3 * error.bar.jitter, y    = boxplot.data[['beta.point']][14] - 
+                                                                     boxplot.data[['sd.error']][14],
+                            xend  = 2 + 3 * error.bar.jitter, yend = boxplot.data[['beta.point']][14] +
+                                                                     boxplot.data[['sd.error']][14])) +
+          geom_segment( aes( x    = 2 + 3 * error.bar.jitter - 
+                                    error.bar.width,        y    = boxplot.data[['beta.point']][14] - 
+                                                                   boxplot.data[['sd.error']][14],
+                             xend = 2 + 3 * error.bar.jitter +
+                                    error.bar.width,         yend = boxplot.data[['beta.point']][14] - 
+                                                                    boxplot.data[['sd.error']][14])) +
+          geom_segment( aes( x    = 2 + 3 * error.bar.jitter - 
+                                    error.bar.width,        y    = boxplot.data[['beta.point']][14] + 
+                                                                   boxplot.data[['sd.error']][14],
+                             xend = 2 + 3 * error.bar.jitter +
+                                    error.bar.width,         yend = boxplot.data[['beta.point']][14] +
+                                                                    boxplot.data[['sd.error']][14])) +
+          scale_x_continuous(breaks = c(1,2), limits = c(0.5, 2.5), labels = c('Female','Male')) +
+          scale_y_continuous(limits = c(-0.1,0.24)) +
+          geom_segment(aes(x = 1, y = 0.18, xend = 2, yend = 0.18) ) +
+          geom_segment(aes(x = 1, y = 0.17, xend = 1, yend = 0.18) ) +
+          geom_segment(aes(x = 2, y = 0.17, xend = 2, yend = 0.18) ) +
+          geom_text( aes(x = 1.5, y = 0.20), 
                      label = B.07.pval, 
                      vjust = 'middle',
                      parse = T)  + 
-          geom_text(aes(x = 1.5, y = 0.18),label = 'B*07') +
+          geom_text(aes(x = 1.5, y = 0.22),label = 'B*07') +
           theme_classic() +
           ylab(label = 'Beta') +
           theme( axis.text.x  = element_text( size = 14),
@@ -308,6 +546,7 @@ plot.1 <- boxplot.data %>%
                  axis.title.y = element_text(size = 14) ) +
           theme( aspect.ratio = 1)
 
+#---
 # parameters for second group
 #---
 
@@ -332,9 +571,8 @@ five.nums.plot.2 <- data.frame( ymin   = ymin.plot.2, lower   = lower.plot.2,
                                 middle = middle.plot.2, upper = upper.plot.2,
                                 ymax   = ymax.plot.2,  groups = factor(1:2))
 
-plot.2 <- boxplot.data %>%
-          filter(groups == 3 | groups == 4) %>%
-          ggplot(aes( x = groups, y = beta.point)) +
+plot.2 <- ggplot() +
+
           geom_segment( aes( x    = 1 - box.width, y    = five.nums.plot.2[['upper']][1], 
                              xend = 1 + box.width, yend = five.nums.plot.2[['upper']][1])) +
           geom_segment( aes( x    = 1 - box.width, y    = five.nums.plot.2[['lower']][1], 
@@ -357,20 +595,260 @@ plot.2 <- boxplot.data %>%
           geom_segment( aes( x    = 2 - box.width, y    = five.nums.plot.2[['middle']][2], 
                              xend = 2 + box.width, yend = five.nums.plot.2[['middle']][2]),
                         size = 1) +
-          geom_point( aes(fill = groups), 
-                      shape = 16 , size = 2, alpha = 0.5, show.legend = F)  + 
-          scale_x_discrete(labels = c('Female','Male')) +
-          scale_y_continuous(limits = c(-0.1,0.18)) +
-          geom_segment(aes(x = 1, y = 0.15, xend = 2, yend = 0.15) ) +
-          geom_segment(aes(x = 1, y = 0.14, xend = 1, yend = 0.15) ) +
-          geom_segment(aes(x = 2, y = 0.14, xend = 2, yend = 0.15) ) +
-          geom_text( aes(x = 1.5, y = 0.16), 
+
+          geom_point(aes( x = 1 - 3 * error.bar.jitter, y = boxplot.data[['beta.point']][15])) +
+          geom_segment( aes(x     = 1 - 3 * error.bar.jitter, y    = boxplot.data[['beta.point']][15] - 
+                                                                     boxplot.data[['sd.error']][15],
+                            xend  = 1 - 3 * error.bar.jitter, yend = boxplot.data[['beta.point']][15] +
+                                                                     boxplot.data[['sd.error']][15])) +
+          geom_segment( aes( x    = 1 - 3 * error.bar.jitter - 
+                                    error.bar.width,        y    = boxplot.data[['beta.point']][15] - 
+                                                                   boxplot.data[['sd.error']][15],
+                             xend = 1 - 3 * error.bar.jitter +
+                                    error.bar.width,         yend = boxplot.data[['beta.point']][15] - 
+                                                                    boxplot.data[['sd.error']][15])) +
+          geom_segment( aes( x    = 1 - 3 * error.bar.jitter - 
+                                    error.bar.width,        y    = boxplot.data[['beta.point']][15] + 
+                                                                   boxplot.data[['sd.error']][15],
+                             xend = 1 - 3 * error.bar.jitter +
+                                    error.bar.width,         yend = boxplot.data[['beta.point']][15] +
+                                                                    boxplot.data[['sd.error']][15])) +
+
+          geom_point(aes( x = 1 - 2 * error.bar.jitter, y = boxplot.data[['beta.point']][16])) +
+          geom_segment( aes(x     = 1 - 2 * error.bar.jitter, y    = boxplot.data[['beta.point']][16] - 
+                                                                     boxplot.data[['sd.error']][16],
+                            xend  = 1 - 2 * error.bar.jitter, yend = boxplot.data[['beta.point']][16] +
+                                                                     boxplot.data[['sd.error']][16])) +
+          geom_segment( aes( x    = 1 - 2 * error.bar.jitter - 
+                                    error.bar.width,        y    = boxplot.data[['beta.point']][16] - 
+                                                                   boxplot.data[['sd.error']][16],
+                             xend = 1 - 2 * error.bar.jitter +
+                                    error.bar.width,         yend = boxplot.data[['beta.point']][16] - 
+                                                                    boxplot.data[['sd.error']][16])) +
+          geom_segment( aes( x    = 1 - 2 * error.bar.jitter - 
+                                    error.bar.width,        y    = boxplot.data[['beta.point']][16] + 
+                                                                   boxplot.data[['sd.error']][16],
+                             xend = 1 - 2 * error.bar.jitter +
+                                    error.bar.width,         yend = boxplot.data[['beta.point']][16] + 
+                                                                    boxplot.data[['sd.error']][16])) +
+          geom_point(aes( x = 1 - 1 * error.bar.jitter, y = boxplot.data[['beta.point']][17])) +
+          geom_segment( aes(x     = 1 - 1 * error.bar.jitter, y    = boxplot.data[['beta.point']][17] - 
+                                                                     boxplot.data[['sd.error']][17],
+                            xend  = 1 - 1 * error.bar.jitter, yend = boxplot.data[['beta.point']][17] +
+                                                                     boxplot.data[['sd.error']][17])) +
+          geom_segment( aes( x    = 1 - 1 * error.bar.jitter - 
+                                    error.bar.width,        y    = boxplot.data[['beta.point']][17] - 
+                                                                   boxplot.data[['sd.error']][17],
+                             xend = 1 - 1 * error.bar.jitter +
+                                    error.bar.width,         yend = boxplot.data[['beta.point']][17] - 
+                                                                    boxplot.data[['sd.error']][17])) +
+          geom_segment( aes( x    = 1 - 1 * error.bar.jitter - 
+                                    error.bar.width,        y    = boxplot.data[['beta.point']][17] + 
+                                                                   boxplot.data[['sd.error']][17],
+                             xend = 1 - 1 * error.bar.jitter +
+                                    error.bar.width,         yend = boxplot.data[['beta.point']][17] + 
+                                                                    boxplot.data[['sd.error']][17])) +
+          geom_point(aes( x = 1 - 0 * error.bar.jitter, y = boxplot.data[['beta.point']][18])) +
+          geom_segment( aes(x     = 1 - 0 * error.bar.jitter, y    = boxplot.data[['beta.point']][18] - 
+                                                                     boxplot.data[['sd.error']][18],
+                            xend  = 1 - 0 * error.bar.jitter, yend = boxplot.data[['beta.point']][18] +
+                                                                     boxplot.data[['sd.error']][18])) +
+          geom_segment( aes( x    = 1 - 0 * error.bar.jitter - 
+                                    error.bar.width,        y    = boxplot.data[['beta.point']][18] - 
+                                                                   boxplot.data[['sd.error']][18],
+                             xend = 1 - 0 * error.bar.jitter +
+                                    error.bar.width,         yend = boxplot.data[['beta.point']][18] - 
+                                                                    boxplot.data[['sd.error']][18])) +
+          geom_segment( aes( x    = 1 - 0 * error.bar.jitter - 
+                                    error.bar.width,        y    = boxplot.data[['beta.point']][18] + 
+                                                                   boxplot.data[['sd.error']][18],
+                             xend = 1 - 0 * error.bar.jitter +
+                                    error.bar.width,         yend = boxplot.data[['beta.point']][18] + 
+                                                                    boxplot.data[['sd.error']][18])) +
+
+          geom_point(aes( x = 1 + 1 * error.bar.jitter, y = boxplot.data[['beta.point']][19])) +
+          geom_segment( aes(x     = 1 + 1 * error.bar.jitter, y    = boxplot.data[['beta.point']][19] - 
+                                                                     boxplot.data[['sd.error']][19],
+                            xend  = 1 + 1 * error.bar.jitter, yend = boxplot.data[['beta.point']][19] +
+                                                                     boxplot.data[['sd.error']][19])) +
+          geom_segment( aes( x    = 1 + 1 * error.bar.jitter - 
+                                    error.bar.width,        y    = boxplot.data[['beta.point']][19] - 
+                                                                   boxplot.data[['sd.error']][19],
+                             xend = 1 + 1 * error.bar.jitter +
+                                    error.bar.width,         yend = boxplot.data[['beta.point']][19] - 
+                                                                    boxplot.data[['sd.error']][19])) +
+          geom_segment( aes( x    = 1 + 1 * error.bar.jitter - 
+                                    error.bar.width,        y    = boxplot.data[['beta.point']][19] +
+                                                                   boxplot.data[['sd.error']][19],
+                             xend = 1 + 1 * error.bar.jitter +
+                                    error.bar.width,         yend = boxplot.data[['beta.point']][19] +
+                                                                    boxplot.data[['sd.error']][19])) +
+          geom_point(aes( x = 1 + 2 * error.bar.jitter, y = boxplot.data[['beta.point']][20])) +
+          geom_segment( aes(x     = 1 + 2 * error.bar.jitter, y    = boxplot.data[['beta.point']][20] - 
+                                                                     boxplot.data[['sd.error']][20],
+                            xend  = 1 + 2 * error.bar.jitter, yend = boxplot.data[['beta.point']][20] +
+                                                                     boxplot.data[['sd.error']][20])) +
+          geom_segment( aes( x    = 1 + 2 * error.bar.jitter - 
+                                    error.bar.width,        y    = boxplot.data[['beta.point']][20] - 
+                                                                   boxplot.data[['sd.error']][20],
+                             xend = 1 + 2 * error.bar.jitter +
+                                    error.bar.width,         yend = boxplot.data[['beta.point']][20] - 
+                                                                    boxplot.data[['sd.error']][20])) +
+          geom_segment( aes( x    = 1 + 2 * error.bar.jitter - 
+                                    error.bar.width,        y    = boxplot.data[['beta.point']][20] +
+                                                                   boxplot.data[['sd.error']][20],
+                             xend = 1 + 2 * error.bar.jitter +
+                                    error.bar.width,         yend = boxplot.data[['beta.point']][20] +
+                                                                    boxplot.data[['sd.error']][20])) +
+          geom_point(aes( x = 1 + 3 * error.bar.jitter, y = boxplot.data[['beta.point']][21])) +
+          geom_segment( aes(x     = 1 + 3 * error.bar.jitter, y    = boxplot.data[['beta.point']][21] - 
+                                                                     boxplot.data[['sd.error']][21],
+                            xend  = 1 + 3 * error.bar.jitter, yend = boxplot.data[['beta.point']][21] +
+                                                                     boxplot.data[['sd.error']][21])) +
+          geom_segment( aes( x    = 1 + 3 * error.bar.jitter - 
+                                    error.bar.width,        y    = boxplot.data[['beta.point']][21] - 
+                                                                   boxplot.data[['sd.error']][21],
+                             xend = 1 + 3 * error.bar.jitter +
+                                    error.bar.width,         yend = boxplot.data[['beta.point']][21] - 
+                                                                    boxplot.data[['sd.error']][21])) +
+          geom_segment( aes( x    = 1 + 3 * error.bar.jitter - 
+                                    error.bar.width,        y    = boxplot.data[['beta.point']][21] +
+                                                                   boxplot.data[['sd.error']][21],
+                             xend = 1 + 3 * error.bar.jitter +
+                                    error.bar.width,         yend = boxplot.data[['beta.point']][21] +
+                                                                    boxplot.data[['sd.error']][21])) +
+
+          geom_point(aes( x = 2 - 3 * error.bar.jitter, y = boxplot.data[['beta.point']][22])) +
+          geom_segment( aes(x     = 2 - 3 * error.bar.jitter, y    = boxplot.data[['beta.point']][22] - 
+                                                                     boxplot.data[['sd.error']][22],
+                            xend  = 2 - 3 * error.bar.jitter, yend = boxplot.data[['beta.point']][22] +
+                                                                     boxplot.data[['sd.error']][22])) +
+          geom_segment( aes( x    = 2 - 3 * error.bar.jitter - 
+                                    error.bar.width,        y    = boxplot.data[['beta.point']][22] - 
+                                                                   boxplot.data[['sd.error']][22],
+                             xend = 2 - 3 * error.bar.jitter +
+                                    error.bar.width,         yend = boxplot.data[['beta.point']][22] - 
+                                                                    boxplot.data[['sd.error']][22])) +
+          geom_segment( aes( x    = 2 - 3 * error.bar.jitter - 
+                                    error.bar.width,        y    = boxplot.data[['beta.point']][22] + 
+                                                                   boxplot.data[['sd.error']][22],
+                             xend = 2 - 3 * error.bar.jitter +
+                                    error.bar.width,         yend = boxplot.data[['beta.point']][22] +
+                                                                    boxplot.data[['sd.error']][22])) +            
+          geom_point(aes( x = 2 - 2 * error.bar.jitter, y = boxplot.data[['beta.point']][23])) +
+          geom_segment( aes(x     = 2 - 2 * error.bar.jitter, y    = boxplot.data[['beta.point']][23] - 
+                                                                     boxplot.data[['sd.error']][23],
+                            xend  = 2 - 2 * error.bar.jitter, yend = boxplot.data[['beta.point']][23] +
+                                                                     boxplot.data[['sd.error']][23])) +
+          geom_segment( aes( x    = 2 - 2 * error.bar.jitter - 
+                                    error.bar.width,        y    = boxplot.data[['beta.point']][23] - 
+                                                                   boxplot.data[['sd.error']][23],
+                             xend = 2 - 2 * error.bar.jitter +
+                                    error.bar.width,         yend = boxplot.data[['beta.point']][23] - 
+                                                                    boxplot.data[['sd.error']][23])) +
+          geom_segment( aes( x    = 2 - 2 * error.bar.jitter - 
+                                    error.bar.width,        y    = boxplot.data[['beta.point']][23] + 
+                                                                   boxplot.data[['sd.error']][23],
+                             xend = 2 - 2 * error.bar.jitter +
+                                    error.bar.width,         yend = boxplot.data[['beta.point']][23] +
+                                                                    boxplot.data[['sd.error']][23])) +
+          geom_point(aes( x = 2 - 1 * error.bar.jitter, y = boxplot.data[['beta.point']][24])) +
+          geom_segment( aes(x     = 2 - 1 * error.bar.jitter, y    = boxplot.data[['beta.point']][24] - 
+                                                                     boxplot.data[['sd.error']][24],
+                            xend  = 2 - 1 * error.bar.jitter, yend = boxplot.data[['beta.point']][24] +
+                                                                     boxplot.data[['sd.error']][24])) +
+          geom_segment( aes( x    = 2 - 1 * error.bar.jitter - 
+                                    error.bar.width,        y    = boxplot.data[['beta.point']][24] - 
+                                                                   boxplot.data[['sd.error']][24],
+                             xend = 2 - 1 * error.bar.jitter +
+                                    error.bar.width,         yend = boxplot.data[['beta.point']][24] - 
+                                                                    boxplot.data[['sd.error']][24])) +
+          geom_segment( aes( x    = 2 - 1 * error.bar.jitter - 
+                                    error.bar.width,        y    = boxplot.data[['beta.point']][24] + 
+                                                                   boxplot.data[['sd.error']][24],
+                             xend = 2 - 1 * error.bar.jitter +
+                                    error.bar.width,         yend = boxplot.data[['beta.point']][24] +
+                                                                    boxplot.data[['sd.error']][24])) +
+          geom_point(aes( x = 2 - 0 * error.bar.jitter, y = boxplot.data[['beta.point']][25])) +
+          geom_segment( aes(x     = 2 - 0 * error.bar.jitter, y    = boxplot.data[['beta.point']][25] - 
+                                                                     boxplot.data[['sd.error']][25],
+                            xend  = 2 - 0 * error.bar.jitter, yend = boxplot.data[['beta.point']][25] +
+                                                                     boxplot.data[['sd.error']][25])) +
+          geom_segment( aes( x    = 2 - 0 * error.bar.jitter - 
+                                    error.bar.width,        y    = boxplot.data[['beta.point']][25] - 
+                                                                   boxplot.data[['sd.error']][25],
+                             xend = 2 - 0 * error.bar.jitter +
+                                    error.bar.width,         yend = boxplot.data[['beta.point']][25] - 
+                                                                    boxplot.data[['sd.error']][25])) +
+          geom_segment( aes( x    = 2 - 0 * error.bar.jitter - 
+                                    error.bar.width,        y    = boxplot.data[['beta.point']][25] + 
+                                                                   boxplot.data[['sd.error']][25],
+                             xend = 2 - 0 * error.bar.jitter +
+                                    error.bar.width,         yend = boxplot.data[['beta.point']][25] +
+                                                                    boxplot.data[['sd.error']][25])) +
+          geom_point(aes( x = 2 + 1 * error.bar.jitter, y = boxplot.data[['beta.point']][26])) +
+          geom_segment( aes(x     = 2 + 1 * error.bar.jitter, y    = boxplot.data[['beta.point']][26] - 
+                                                                     boxplot.data[['sd.error']][26],
+                            xend  = 2 + 1 * error.bar.jitter, yend = boxplot.data[['beta.point']][26] +
+                                                                     boxplot.data[['sd.error']][26])) +
+          geom_segment( aes( x    = 2 + 1 * error.bar.jitter - 
+                                    error.bar.width,        y    = boxplot.data[['beta.point']][26] - 
+                                                                   boxplot.data[['sd.error']][26],
+                             xend = 2 + 1 * error.bar.jitter +
+                                    error.bar.width,         yend = boxplot.data[['beta.point']][26] - 
+                                                                    boxplot.data[['sd.error']][26])) +
+          geom_segment( aes( x    = 2 + 1 * error.bar.jitter - 
+                                    error.bar.width,        y    = boxplot.data[['beta.point']][26] + 
+                                                                   boxplot.data[['sd.error']][26],
+                             xend = 2 + 1 * error.bar.jitter +
+                                    error.bar.width,         yend = boxplot.data[['beta.point']][26] +
+                                                                    boxplot.data[['sd.error']][26])) +
+          geom_point(aes( x = 2 + 2 * error.bar.jitter, y = boxplot.data[['beta.point']][27])) +
+          geom_segment( aes(x     = 2 + 2 * error.bar.jitter, y    = boxplot.data[['beta.point']][27] - 
+                                                                     boxplot.data[['sd.error']][27],
+                            xend  = 2 + 2 * error.bar.jitter, yend = boxplot.data[['beta.point']][27] +
+                                                                     boxplot.data[['sd.error']][27])) +
+          geom_segment( aes( x    = 2 + 2 * error.bar.jitter - 
+                                    error.bar.width,        y    = boxplot.data[['beta.point']][27] - 
+                                                                   boxplot.data[['sd.error']][27],
+                             xend = 2 + 2 * error.bar.jitter +
+                                    error.bar.width,         yend = boxplot.data[['beta.point']][27] - 
+                                                                    boxplot.data[['sd.error']][27])) +
+          geom_segment( aes( x    = 2 + 2 * error.bar.jitter - 
+                                    error.bar.width,        y    = boxplot.data[['beta.point']][27] + 
+                                                                   boxplot.data[['sd.error']][27],
+                             xend = 2 + 2 * error.bar.jitter +
+                                    error.bar.width,         yend = boxplot.data[['beta.point']][27] +
+                                                                    boxplot.data[['sd.error']][27])) +
+          geom_point(aes( x = 2 + 3 * error.bar.jitter, y = boxplot.data[['beta.point']][28])) +
+          geom_segment( aes(x     = 2 + 3 * error.bar.jitter, y    = boxplot.data[['beta.point']][28] - 
+                                                                     boxplot.data[['sd.error']][28],
+                            xend  = 2 + 3 * error.bar.jitter, yend = boxplot.data[['beta.point']][28] +
+                                                                     boxplot.data[['sd.error']][28])) +
+          geom_segment( aes( x    = 2 + 3 * error.bar.jitter - 
+                                    error.bar.width,        y    = boxplot.data[['beta.point']][28] - 
+                                                                   boxplot.data[['sd.error']][28],
+                             xend = 2 + 3 * error.bar.jitter +
+                                    error.bar.width,         yend = boxplot.data[['beta.point']][28] - 
+                                                                    boxplot.data[['sd.error']][28])) +
+          geom_segment( aes( x    = 2 + 3 * error.bar.jitter - 
+                                    error.bar.width,        y    = boxplot.data[['beta.point']][28] + 
+                                                                   boxplot.data[['sd.error']][28],
+                             xend = 2 + 3 * error.bar.jitter +
+                                    error.bar.width,         yend = boxplot.data[['beta.point']][28] +
+                                                                    boxplot.data[['sd.error']][28])) +
+          scale_x_continuous(breaks = c(1,2), limits = c(0.5,2.5), labels = c('Female','Male')) +
+          scale_y_continuous(limits = c(-0.25,0.42)) +
+          geom_segment(aes(x = 1, y = 0.34, xend = 2, yend = 0.34) ) +
+          geom_segment(aes(x = 1, y = 0.33, xend = 1, yend = 0.34) ) +
+          geom_segment(aes(x = 2, y = 0.33, xend = 2, yend = 0.34) ) +
+          geom_text( aes(x = 1.5, y = 0.38), 
                      label = DRB1.07.pval, 
                      vjust = 'middle',
                      parse = T)  + 
           theme_classic() +
           ylab(label = 'Beta') +
-          geom_text(aes(x = 1.5, y = 0.18),label = 'DRB1*07') +
+          geom_text(aes(x = 1.5, y = 0.42),label = 'DRB1*07') +
           theme( axis.text.x  = element_text( size = 14),
                  axis.title.x = element_blank(),
                  axis.title.y = element_text(size = 14) ) +
