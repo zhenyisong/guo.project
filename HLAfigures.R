@@ -75,11 +75,11 @@ Exclude   <- c('台湾省','香港特别行政区','澳门特别行政区')
 prov.group <- rep(0 ,length(prov.name))
 prov.group[prov.name %in% Northeast] <- 1
 prov.group[prov.name %in% North]     <- 2
-prov.group[prov.name %in% Northwest] <- 7
+prov.group[prov.name %in% Northwest] <- 3
 prov.group[prov.name %in% East]      <- 4
 prov.group[prov.name %in% Central]   <- 5
 prov.group[prov.name %in% South]     <- 6
-prov.group[prov.name %in% Southwest] <- 3
+prov.group[prov.name %in% Southwest] <- 7
 prov.group[prov.name %in% Exclude]   <- 8
 
 #---
@@ -180,7 +180,8 @@ mtext.param.3     <- list( A   = 'A',  B = 'B', C = 'C', D = 'D')
 args.plot.1       <- list(plot.1.results, mlab.param, mtext.param.1, mtext.param.2, mtext.param.3)
 dev.off()
 setwd(guo.figures.path)
-jpeg(file = 'Figure3.jpg', width = 800, height = 900, units = 'mm', res = 600, pointsize = 50)
+jpeg( file  = 'Figure3.jpg', width = 800, height = 900, 
+      units = 'mm', res = 300, pointsize = 50, quality = 50)
 #---
 #  Working on side by side forest plot
 #  mfrow meaning number of row, 2 is how many panel will be side by side;
@@ -227,7 +228,7 @@ boxplot.data <- map( file.names, read.forest.data,
                      lab.notation = lab.notation.1) %>%
                 format.df()
 
-B.07.pval    <- paste( 'italic(\'P\')[italic(\'heterogeneity\')]', ' == 0.00767', sep = '')
+B.07.pval    <- paste( 'italic(\'P\')[italic(\'heterogeneity\')]', ' == 0.0067', sep = '')
 DRB1.07.pval <- paste( 'italic(\'P\')[italic(\'heterogeneity\')]', ' == 0.00058', sep = '')
 
 #--
@@ -240,15 +241,17 @@ DRB1.07.pval <- paste( 'italic(\'P\')[italic(\'heterogeneity\')]', ' == 0.00058'
 # manual draw the map
 #
 box.width        <- 0.3
-error.bar.jitter  <- 0.05
-error.bar.width   <- 0.01
+error.bar.jitter <- 0.05
+error.bar.width  <- 0.01
 ymin.plot.1      <- c( boxplot.data %>% filter(groups == 1) %>% 
                        select(beta.point)%>% min(),
                        boxplot.data %>% filter(groups == 2) %>%
                        select(beta.point) %>% min())
-middle.plot.1    <- c(0.03909,0.0993)
-female.sd.1      <- 0.014958
-male.sd.1        <- 0.016
+
+middle.plot.1   <- c(0.018112,0.066471)
+female.sd.1     <- 0.009476
+male.sd.1       <- 0.010375 
+
 lower.plot.1     <- c( middle.plot.1[1] - female.sd.1,
                        middle.plot.1[2] - male.sd.1 )
 upper.plot.1     <- c( middle.plot.1[1] + female.sd.1,
@@ -257,16 +260,18 @@ ymax.plot.1      <- c( boxplot.data %>% filter(groups == 1) %>%
                        select(beta.point)%>% unlist %>% max(),
                        boxplot.data %>% filter(groups == 2) %>%
                        select(beta.point) %>% unlist %>% max())
-               
 
-five.nums.plot.1 <- data.frame( ymin   = ymin.plot.1, lower = lower.plot.1,
+              
+
+five.nums.plot.1 <- data.frame( ymin   = ymin.plot.1,   lower = lower.plot.1,
                                 middle = middle.plot.1, upper = upper.plot.1,
                                 ymax   = ymax.plot.1,  groups = factor(1:2))
 
 plot.1 <- ggplot() +
 
           geom_segment( aes( x    = 1 - box.width, y    = five.nums.plot.1[['upper']][1], 
-                             xend = 1 + box.width, yend = five.nums.plot.1[['upper']][1])) +
+                             xend = 1 + box.width, yend = five.nums.plot.1[['upper']][1]), 
+                       linetype = 'solid') +
           geom_segment( aes( x    = 1 - box.width, y    = five.nums.plot.1[['lower']][1], 
                              xend = 1 + box.width, yend = five.nums.plot.1[['lower']][1])) +
           geom_segment( aes( x    = 1 - box.width, y    = five.nums.plot.1[['upper']][1], 
@@ -275,7 +280,7 @@ plot.1 <- ggplot() +
                              xend = 1 + box.width, yend = five.nums.plot.1[['lower']][1])) +
           geom_segment( aes( x    = 1 - box.width, y    = five.nums.plot.1[['middle']][1], 
                              xend = 1 + box.width, yend = five.nums.plot.1[['middle']][1]),
-                        size = 1) +
+                        size = 0.5) +
           geom_segment( aes( x    = 2 - box.width, y    = five.nums.plot.1[['upper']][2], 
                              xend = 2 + box.width, yend = five.nums.plot.1[['upper']][2])) +
           geom_segment( aes( x    = 2 - box.width, y    = five.nums.plot.1[['lower']][2], 
@@ -286,7 +291,7 @@ plot.1 <- ggplot() +
                              xend = 2 + box.width, yend = five.nums.plot.1[['lower']][2])) +
           geom_segment( aes( x    = 2 - box.width, y    = five.nums.plot.1[['middle']][2], 
                              xend = 2 + box.width, yend = five.nums.plot.1[['middle']][2]),
-                        size = 1) +
+                        size = 0.5) +
 
           geom_point(aes( x = 1 - 3 * error.bar.jitter, y = boxplot.data[['beta.point']][1])) +
           geom_segment( aes(x     = 1 - 3 * error.bar.jitter, y    = boxplot.data[['beta.point']][1] - 
@@ -530,15 +535,15 @@ plot.1 <- ggplot() +
                                     error.bar.width,         yend = boxplot.data[['beta.point']][14] +
                                                                     boxplot.data[['sd.error']][14])) +
           scale_x_continuous(breaks = c(1,2), limits = c(0.5, 2.5), labels = c('Female','Male')) +
-          scale_y_continuous(limits = c(-0.1,0.24)) +
+          scale_y_continuous(breaks = seq(-0.1,24, 0.05), limits = c(-0.1,0.25)) +
           geom_segment(aes(x = 1, y = 0.18, xend = 2, yend = 0.18) ) +
           geom_segment(aes(x = 1, y = 0.17, xend = 1, yend = 0.18) ) +
           geom_segment(aes(x = 2, y = 0.17, xend = 2, yend = 0.18) ) +
           geom_text( aes(x = 1.5, y = 0.20), 
-                     label = B.07.pval, 
+                     label = DRB1.07.pval, 
                      vjust = 'middle',
                      parse = T)  + 
-          geom_text(aes(x = 1.5, y = 0.22),label = 'B*07') +
+          geom_text(aes(x = 1.5, y = 0.23),label = 'DRB1*07') +
           theme_classic() +
           ylab(label = 'Beta') +
           theme( axis.text.x  = element_text( size = 14),
@@ -554,9 +559,12 @@ ymin.plot.2     <- c( boxplot.data %>% filter(groups == 3) %>%
                       select(beta.point)%>% min(),
                       boxplot.data %>% filter(groups == 4) %>%
                       select(beta.point) %>% min())
-middle.plot.2   <- c(0.018112,0.066471)
-female.sd.2     <- 0.009476
-male.sd.2       <- 0.010375
+
+middle.plot.2    <- c(0.03909,0.0993)
+female.sd.2      <- 0.014958
+male.sd.2       <- 0.016
+
+
 lower.plot.2    <- c( middle.plot.2[1] - female.sd.2,
                       middle.plot.2[2] - male.sd.2 )
 upper.plot.2    <- c( middle.plot.2[1] + female.sd.2,
@@ -583,7 +591,7 @@ plot.2 <- ggplot() +
                              xend = 1 + box.width, yend = five.nums.plot.2[['lower']][1])) +
           geom_segment( aes( x    = 1 - box.width, y    = five.nums.plot.2[['middle']][1], 
                              xend = 1 + box.width, yend = five.nums.plot.2[['middle']][1]),
-                        size = 1) + 
+                        size = 0.5) + 
           geom_segment( aes( x    = 2 - box.width, y    = five.nums.plot.2[['upper']][2], 
                              xend = 2 + box.width, yend = five.nums.plot.2[['upper']][2])) +
           geom_segment( aes( x    = 2 - box.width, y    = five.nums.plot.2[['lower']][2], 
@@ -594,7 +602,7 @@ plot.2 <- ggplot() +
                              xend = 2 + box.width, yend = five.nums.plot.2[['lower']][2])) +
           geom_segment( aes( x    = 2 - box.width, y    = five.nums.plot.2[['middle']][2], 
                              xend = 2 + box.width, yend = five.nums.plot.2[['middle']][2]),
-                        size = 1) +
+                        size = 0.5) +
 
           geom_point(aes( x = 1 - 3 * error.bar.jitter, y = boxplot.data[['beta.point']][15])) +
           geom_segment( aes(x     = 1 - 3 * error.bar.jitter, y    = boxplot.data[['beta.point']][15] - 
@@ -838,23 +846,23 @@ plot.2 <- ggplot() +
                                     error.bar.width,         yend = boxplot.data[['beta.point']][28] +
                                                                     boxplot.data[['sd.error']][28])) +
           scale_x_continuous(breaks = c(1,2), limits = c(0.5,2.5), labels = c('Female','Male')) +
-          scale_y_continuous(limits = c(-0.25,0.42)) +
+          scale_y_continuous(breaks = seq(-0.25, 0.42, 0.1), limits = c(-0.25,0.45)) +
           geom_segment(aes(x = 1, y = 0.34, xend = 2, yend = 0.34) ) +
           geom_segment(aes(x = 1, y = 0.33, xend = 1, yend = 0.34) ) +
           geom_segment(aes(x = 2, y = 0.33, xend = 2, yend = 0.34) ) +
           geom_text( aes(x = 1.5, y = 0.38), 
-                     label = DRB1.07.pval, 
+                     label = B.07.pval, 
                      vjust = 'middle',
                      parse = T)  + 
           theme_classic() +
           ylab(label = 'Beta') +
-          geom_text(aes(x = 1.5, y = 0.42),label = 'DRB1*07') +
+          geom_text(aes(x = 1.5, y = 0.43),label = 'B*07') +
           theme( axis.text.x  = element_text( size = 14),
                  axis.title.x = element_blank(),
                  axis.title.y = element_text(size = 14) ) +
           theme( aspect.ratio = 1)
 
-figure4.boxplot <- plot_grid( plot.1, plot.2, labels = c('A','B'), 
+figure4.boxplot <- plot_grid( plot.2, plot.1, labels = c('A','B'), 
                               ncol = 2, nrow = 1)
 setwd(guo.figures.path)
 ggsave( 'Figure4.jpeg', plot = figure4.boxplot, 
@@ -907,7 +915,7 @@ for (i in c(1 : cell.len) ){
         figure4C.table$grobs[ind][[1]][['gp']] <- gpar(fill = 'red', col = NA)
     }
     else {
-        figure4C.table$grobs[ind][[1]][['gp']] <- gpar(fill = 'green', col = NA)
+        figure4C.table$grobs[ind][[1]][['gp']] <- gpar(fill = 'blue', col = NA)
     }
 }
 
