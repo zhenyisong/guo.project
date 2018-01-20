@@ -883,6 +883,7 @@ figure4C.df       <- read.xlsx( figure4C.filename, sheet = 1,
 dev.off()
 figure4C.table <- tableGrob(figure4C.df, rows = NULL)
 
+
 find.cell <- function(table, row, col, name = 'core-fg') {
     layout <- table$layout
     which( layout$t    == row & 
@@ -912,15 +913,71 @@ for (i in c(1 : cell.len) ){
     cell.y = cell.in.y[i]
     ind <- find.cell(figure4C.table, cell.x, cell.y, 'core-bg')
     if (cell.x >= 14) {
-        figure4C.table$grobs[ind][[1]][['gp']] <- gpar(fill = 'red', col = NA)
+        figure4C.table$grobs[ind][[1]][['gp']] <- gpar(fill = 'blue1', col = NA)
     }
     else {
-        figure4C.table$grobs[ind][[1]][['gp']] <- gpar(fill = 'blue', col = NA)
+        figure4C.table$grobs[ind][[1]][['gp']] <- gpar(fill = 'red', col = NA)
     }
 }
 
-grid.newpage()
-grid.draw(figure4C.table)
+
+AH.low.V   <- linesGrob( x = unit(c(148, 148), 'mm'),
+                         y = unit(c(0, 15), 'mm'))
+AH.low.h1  <- linesGrob( x = unit(c(145, 148), 'mm'),
+                         y = unit(c(0, 0), 'mm'))
+AH.low.h2  <- linesGrob( x = unit(c(145, 148), 'mm'),
+                        y = unit(c(15, 15), 'mm'))
+AH.low.txt <- textGrob( label = 'AH', 
+                        x = unit(150, 'mm'), 
+                        y = unit(7.5, 'mm'),
+                        just = 'left')
+
+AH.hi.V   <- linesGrob( x = unit(c(148, 148), 'mm'),
+                        y = unit(c(28, 50), 'mm'))
+AH.hi.h1  <- linesGrob( x = unit(c(145, 148), 'mm'),
+                        y = unit(c(28, 28), 'mm'))
+AH.hi.h2  <- linesGrob( x = unit(c(145, 148), 'mm'),
+                        y = unit(c(50, 50), 'mm'))
+AH.hi.txt <- textGrob( label = 'AH', 
+                       x = unit(150, 'mm'), 
+                       y = unit(39, 'mm'),
+                       just = 'left') 
+
+CH.V      <- linesGrob( x = unit(c(148, 148), 'mm'),
+                        y = unit(c(58, 80), 'mm'))
+CH.h1     <- linesGrob( x = unit(c(145, 148), 'mm'),
+                        y = unit(c(58, 58), 'mm'))
+CH.h2     <- linesGrob( x = unit(c(145, 148), 'mm'),
+                        y = unit(c(80, 80), 'mm'))
+CH.txt    <- textGrob( label = 'CH', 
+                       x = unit(150, 'mm'), 
+                       y = unit(69, 'mm'),
+                       just = 'left')
+   
+
+DR.txt    <- textGrob( label = 'DR2', 
+                       x = unit(150, 'mm'), 
+                       y = unit(130, 'mm'),
+                       just = 'left')
+   
+
+figure4C.ggplot <- ggplot() + annotation_custom( grob = figure4C.table ) +
+                              annotation_custom( grob = AH.low.V) +
+                              annotation_custom( grob = AH.low.h1) +
+                              annotation_custom( grob = AH.low.h2) +
+                              annotation_custom( grob = AH.low.txt) +
+                              annotation_custom( grob = AH.hi.V) +
+                              annotation_custom( grob = AH.hi.h1) +
+                              annotation_custom( grob = AH.hi.h2) +
+                              annotation_custom( grob = AH.hi.txt) +
+                              annotation_custom( grob = CH.txt) +
+                              annotation_custom( grob = CH.V) +
+                              annotation_custom( grob = CH.h1) +
+                              annotation_custom( grob = CH.h2) +
+                              annotation_custom( grob = CH.txt) +
+                              annotation_custom( grob = DR.txt)
+
 
 setwd(guo.figures.path)
-ggsave('Figure4C.jpeg', figure4C.table, height = 150, dpi = 600, unit = 'mm')
+ggsave( 'Figure4C.jpg', figure4C.ggplot, 
+        width = 190, height = 150, dpi = 600, unit = 'mm')
