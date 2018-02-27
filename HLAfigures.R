@@ -8,7 +8,8 @@
 
 # install.packages('metafor', repo = 'http://mirrors.ustc.edu.cn/CRAN/')
 pkgs             <- c( 'metafor','tidyverse','magrittr','stringr','cowplot',
-                       'rgdal','sp', 'tmap','openxlsx','grid','gridExtra')
+                       'rgdal','sp', 'tmap','openxlsx','grid','gridExtra', 
+                       'reshape2')
 load.libs        <- lapply(pkgs, require, character.only = T)
 
 guo.figures.path <- file.path('D:\\sourcecode\\guo.project\\figures')
@@ -981,3 +982,87 @@ figure4C.ggplot <- ggplot() + annotation_custom( grob = figure4C.table ) +
 setwd(guo.figures.path)
 ggsave( 'Figure4C.jpg', figure4C.ggplot, 
         width = 190, height = 150, dpi = 600, unit = 'mm')
+
+
+#---
+# in responding to Guo's final desiciosn
+# from editor's suggestion
+# updated since 02-27-2018
+#---
+
+# final figure figure 5A;
+
+setwd('D:\\sourcecode\\guo.project\\update.data')
+# setwd('/home/zhenyisong/data/guotingwei/nejm_data')
+# import the correlation matrix;
+cormat <- read.csv( 'ld_r2_36.csv', row.names = 1)  # read csv file 
+cormat.colnames  <- colnames(cormat)
+cormat.colnames  <- sub( '\\.', '\\*', cormat.colnames, perl = T)
+cormat.colnames  <- sub( '\\.', '\\:', cormat.colnames, perl = T)
+colnames(cormat) <- cormat.colnames
+# correlation matrix have to be in the matrix format;
+cormat <- as.matrix(cormat)
+head(cormat)
+#row.names(cormat)<-cormat[,1]
+# cormat<-cormat[,-c(1)]
+
+melted_cormat <- melt(cormat)
+
+# Functions to Get lower triangle of the correlation matrix;
+get_lower_tri <- function(cormat) {
+    cormat[upper.tri(cormat)] <- NA
+    return(cormat)
+}
+
+# Get upper triangle of the correlation matrix
+get_upper_tri <- function(cormat) {
+    cormat[lower.tri(cormat)]<- NA
+    return(cormat)
+}
+
+
+# get the uppper upper triangle;
+upper_tri <- get_upper_tri(cormat)
+upper_tri
+
+
+
+# Melt the correlation matrix of upper tri again;
+
+melted_cormat <- melt(upper_tri, na.rm = TRUE)
+
+figure.5A <- ggplot(data = melted_cormat, aes(Var2,Var1, fill = value)) +
+             geom_tile(color = 'white') +
+             scale_fill_gradient2( low = 'blue', high = 'brown', mid = 'white', 
+                                   midpoint = 0, limit = c(-1, 1), space = 'Lab', 
+                                   name='Pearson\nCorrelation') +
+             #theme_minimal() + 
+             theme( axis.text.x = element_text( angle = 90, vjust = 1, family = 'serif',
+                                                size  = 9, hjust = 1, face = 'italic'),
+                    axis.text.y = element_text( angle = 0, vjust  = 1, family = 'serif',
+                                                size  = 9, hjust = 1, face  = 'italic'),
+                    axis.title.x = element_blank(),
+                    axis.title.y = element_blank(),
+                    panel.grid.major = element_blank(),
+                    panel.border     = element_blank(),
+                    panel.background = element_blank(),
+                    axis.ticks       = element_blank(),
+                    legend.justification = c(1, 0),
+                    legend.position      = c(0.6, 0.7),
+                    legend.text          = element_text(
+                                             size = 9, colour = 'red'),
+                    legend.direction = 'horizontal') +
+             guides( fill = guide_colorbar( barwidth = 7, 
+                                            barheight = 1,
+                                            title.position = 'top', 
+                                            title.hjust    = 0.5)) +
+             coord_fixed()
+
+
+# Use geom_text() to add the correlation coefficients on the graph
+# Use a blank theme (remove axis labels, panel grids and background, and axis ticks)
+# Use guides() to change the position of the legend title
+  
+setwd(guo.figures.path)
+ggsave('Figure5A.jpeg', figure.5A, height = 150, dpi = 600, unit = 'mm')
+
